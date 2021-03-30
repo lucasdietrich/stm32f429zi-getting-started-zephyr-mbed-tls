@@ -7,24 +7,22 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(main_log, LOG_LEVEL_DBG);
 
-#include "hw.h"
-#include "if.h"
+#include "app.h"
+
+c_application app;
 
 void main(void)
-{
-    LOG_INF("main Init ...");
+{    
+    // init app
+    //c_application::get_instance()->init();
 
-    hw_init_leds();
+    app.init();
 
-    k_sleep(K_MSEC(1000));
+    while(1);
+}
 
-    init_if();
-
+/*
     k_sleep(K_MSEC(15000));
 
     down_if();
-
-    while(1) {
-        
-    }
-}
+*/

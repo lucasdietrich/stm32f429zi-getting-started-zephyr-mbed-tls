@@ -18,9 +18,16 @@
 #include <net/net_core.h>
 #include <net/net_context.h>
 #include <net/net_mgmt.h>
+#include <net/net_config.h>
+
+#include <net/sntp.h>
+
+// #include <sys/time.h>
 
 void init_if(void);
 
 void down_if(void);
+
+void get_sntp_time(void);
 
 #endif

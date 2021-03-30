@@ -17,7 +17,7 @@ void hw_init_leds(void) {
     gpio_pin_configure(dev_leds[led_t::BLUE], LED_BLUE_PIN, GPIO_OUTPUT_ACTIVE | LED_BLUE_FLAGS);
     gpio_pin_configure(dev_leds[led_t::RED], LED_RED_PIN, GPIO_OUTPUT_ACTIVE | LED_RED_FLAGS);
 
-    bool leds_state = 1u;
+    bool leds_state = true;
 
 	for(uint_fast8_t i = 0; i < 10; i++)
     {
