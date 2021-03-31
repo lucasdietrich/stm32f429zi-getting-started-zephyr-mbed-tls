@@ -28,6 +28,11 @@ void init_if(void);
 
 void down_if(void);
 
-void get_sntp_time(void);
+/**
+ * @brief Get seconds from the the sntp time object
+ * 
+ * @return uint64_t : current time in seconds, return 0 if error
+ */
+uint64_t get_sntp_time(void);
 
 #endif

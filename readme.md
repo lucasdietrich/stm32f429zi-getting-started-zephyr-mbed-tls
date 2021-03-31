@@ -1,5 +1,9 @@
 # Nucleo f429zi
 
+Current system model
+
+![./system_model.png](./pics/system_model.png)
+
 # Todo
 
 ## file system fs_read / fs_write
@@ -10,6 +14,15 @@
 
 - Workqueues : https://docs.zephyrproject.org/1.9.0/kernel/threads/workqueues.html
 
+## Threading Zephyr
+
+Zephyr Scheduling : Interesting and important : https://docs.zephyrproject.org/1.12.0/kernel/threads/scheduling.html
+- Threading API : https://docs.zephyrproject.org/latest/reference/kernel/threads/index.html
+- Scheduling API : https://docs.zephyrproject.org/latest/reference/kernel/scheduling/index.html
+
+Polling API : https://docs.zephyrproject.org/1.9.0/kernel/other/polling.html
+
+About `main` thread : https://docs.zephyrproject.org/1.12.0/kernel/threads/system_threads.html
 
 # Info
 

@@ -7,6 +7,8 @@ LOG_MODULE_REGISTER(init_if, LOG_LEVEL_DBG);
 
 static struct net_mgmt_event_callback mgmt_cb[2];
 
+extern struct k_poll_signal signal_net_addr_up;
+
 static void net_event_handler(struct net_mgmt_event_callback *cb,
 		    uint32_t mgmt_event,
 		    struct net_if *iface)
@@ -15,13 +17,12 @@ static void net_event_handler(struct net_mgmt_event_callback *cb,
     {
 
     case NET_EVENT_IPV4_ADDR_DEL:
-        hw_set_led(led_t::BLUE, led_state_t::OFF);
+        hw_set_led(led_t::GREEN, led_state_t::OFF);
 
         LOG_INF("~ NET_EVENT_IPV4_ADDR_DEL");
         break;
 
     case NET_EVENT_IF_UP:
-        hw_set_led(led_t::GREEN, led_state_t::ON);
         hw_set_led(led_t::RED, led_state_t::OFF);
 
         LOG_INF("~ NET_EVENT_IF_UP");
@@ -32,14 +33,16 @@ static void net_event_handler(struct net_mgmt_event_callback *cb,
 
     case NET_EVENT_IF_DOWN:
         hw_set_led(led_t::GREEN, led_state_t::OFF);
-        hw_set_led(led_t::BLUE, led_state_t::OFF);
         hw_set_led(led_t::RED, led_state_t::ON);
+
+        // todo when disconnectin the Ethernet Wire this happens, see how to handle ...
+
 
         LOG_INF("~ NET_EVENT_IF_DOWN");
         break;
 
     case NET_EVENT_IPV4_ADDR_ADD:
-        hw_set_led(led_t::BLUE, led_state_t::ON);
+        hw_set_led(led_t::GREEN, led_state_t::ON);
 
         LOG_INF("~ NET_EVENT_IPV4_ADDR_ADD");
 
@@ -70,8 +73,8 @@ static void net_event_handler(struct net_mgmt_event_callback *cb,
                                              buf, sizeof(buf))));
         }
 
-        // continue, do sntp ...
-        // k_work_init()
+        // signal that net if has IP addr
+        k_poll_signal_raise(&signal_net_addr_up, 1);
 
         break;
 
@@ -102,7 +105,7 @@ void init_if(void) {
     net_dhcpv4_start(iface);
 }
 
-void get_sntp_time(void) {
+uint64_t get_sntp_time(void) {
     int err;
     struct sntp_time get_time;
 
@@ -120,11 +123,14 @@ void get_sntp_time(void) {
             LOG_INF("sntp_client : get_sntp_time err %d", err);
         }
 
-        return;
+        return 0;
     }
 
     LOG_INF("sntp_client : time since Epoch: high word: %u, low word: %u",
             (uint32_t)(get_time.seconds >> 32), (uint32_t)get_time.seconds);
+
+    // return time in seconds
+    return get_time.seconds;
 
     /*
 
