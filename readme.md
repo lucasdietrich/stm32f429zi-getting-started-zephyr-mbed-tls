@@ -2,7 +2,11 @@
 
 Current system model
 
-![./system_model.png](./pics/system_model.png)
+![system_model.png](./pics/system_model.png)
+
+Log
+
+![log_dhcp_sntp_datetime.png](./pics/log_dhcp_sntp_datetime.png)
 
 # Todo
 
