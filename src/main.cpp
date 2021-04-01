@@ -9,6 +9,7 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(main_log, LOG_LEVEL_DBG);
 
+#include "config.h"
 #include "app.h"
 
 c_application app;

@@ -3,7 +3,7 @@
 
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(init_if, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(if, LOG_LEVEL_DBG);
 
 static struct net_mgmt_event_callback mgmt_cb[2];
 

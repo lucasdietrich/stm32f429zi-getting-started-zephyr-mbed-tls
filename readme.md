@@ -1,3 +1,5 @@
+**this repo contains pictures and big O files, it is only a getting started project :)**
+
 # Nucleo f429zi
 
 Current system model
@@ -8,11 +10,55 @@ Log
 
 ![log_dhcp_sntp_datetime.png](./pics/log_dhcp_sntp_datetime.png)
 
-# Todo
+UDP discovery - v1
+
+![udp_discovery_v1.png](./udp_discovery_v1.png)
+
+# Questions, todo & Open Points
+
+## Get the MAC addr (can we change it ?)
+
+See how to get a static IP, does DHCP give a rdm IP or does the MAC addr change
+
+- 02:80:e1:b4:be:77
+- 02:80:e1:35:7e:07
+
+MAC address seems to change (only the 3 last bytes).
+The 3 first bytees stay the sames
+
+We can fix theses values in the prj.conf file
+
+```
+CONFIG_ETH_STM32_HAL_RANDOM_MAC=n
+CONFIG_ETH_STM32_HAL_MAC3=77
+CONFIG_ETH_STM32_HAL_MAC4=77
+CONFIG_ETH_STM32_HAL_MAC5=77
+```
+
+After mac address is not random anymore 
+
+First 3 bytes changed in NOT RANDOM MAC mode (security ? lock ?)
+```
+00:80:e1:77:77:77
+```
+
+## Choose different port than 5000 (which is DNS port)
+
+## UDP discovery, return ip, time, app name, version, and other stats
+
+Python *scapy* library to test udp discovery : `from scapy.all import *` : `send(IP(dst="192.168.10.255")/UDP(dport=5000)/Raw(load="hello"))`
+
+## make it more robust
+
+## see how to use/create static variables & set class singleton, set port and other parameters
 
 ## file system fs_read / fs_write
 
 ## set time
+
+## efficient way to handle errors
+
+![./errors.h.png](./pics/errno.h.png)
 
 ## k_work_init to sync tasks
 

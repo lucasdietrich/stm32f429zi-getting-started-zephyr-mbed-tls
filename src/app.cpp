@@ -4,7 +4,7 @@
 #include "if.h"
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(main_app, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(app, LOG_LEVEL_DBG);
 
 c_application::c_application()
 {
@@ -17,11 +17,14 @@ c_application::c_application()
 // https://docs.zephyrproject.org/1.9.0/kernel/timing/clocks.html#measuring-time-with-normal-precision
 void c_application::set_time(uint64_t abs_time, uint32_t sntp_instant)
 {
-    if (sntp_instant == 0)
+    if (sntp_instant != 0)
+    {
+        time.sntp_instant = sntp_instant;
+    }
+    else
     {
         time.sntp_instant = k_uptime_get() / MSEC_PER_SEC;  // current time in seconds
     }
-    
     time.abs_time = abs_time;
 }
 
@@ -94,4 +97,8 @@ void c_application::init(void)
 
         k_sleep(K_MSEC(250));
     }
+
+    // udp discovery thread start
+    discovery.set_port(DISCOVERY_PORT);
+    discovery.thread_start();
 }

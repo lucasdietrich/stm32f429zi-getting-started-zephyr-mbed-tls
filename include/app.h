@@ -2,10 +2,12 @@
 #define _APP_H
 
 #include <stdint.h>
-
 #include <sys/timeutil.h>
 
-#define TZ_SHIFT    2*60*60
+#include "config.h"
+#include "discovery.h"
+
+#define TZ_SHIFT    DEFAULT_TIMEZONE_SHIFT
 
 
 struct app_config_t {
@@ -20,16 +22,19 @@ struct app_time_t {
 // make this class a *singleton*
 class c_application
 {
-public:
+protected:
     static c_application * p_instance;
+
+    c_discovery discovery;
 
     void set_time(uint64_t abs_time, uint32_t sntp_instant);
     
-public:
     struct app_config_t config;
     struct app_time_t time;
     struct tm time_infos;
 
+
+public:
     c_application();
 
     /*
