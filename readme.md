@@ -12,7 +12,7 @@ Log
 
 UDP discovery - v1
 
-![udp_discovery_v1.png](./udp_discovery_v1.png)
+![udp_discovery_v1.png](./pics/udp_discovery_v1.png)
 
 # Questions, todo & Open Points
 
@@ -41,6 +41,12 @@ First 3 bytes changed in NOT RANDOM MAC mode (security ? lock ?)
 ```
 00:80:e1:77:77:77
 ```
+
+## Singleton - Design pattern
+
+- Description : https://h-deb.clg.qc.ca/Sujets/Divers--cplusplus/CPP--Singletons.html
+- Interesting article about Singleton for Embedded : https://www.embeddedrelated.com/showarticle/691.php
+- Other article : https://lonkamikaze.github.io/2019/10/05/embedded-cxx-singletons
 
 ## Choose different port than 5000 (which is DNS port)
 

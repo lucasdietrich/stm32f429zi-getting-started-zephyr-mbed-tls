@@ -2,6 +2,8 @@
 #define DEFAULT_TIMEZONE_SHIFT 2*3600
 
 // sntp
+#define DEFAULT_SNTP_RETRIES    3
+#define DEFAULT_SNTP_RETRY_INTERVAL_MS  250
 
 // udp discovery
 #define DEFAULT_DISCOVERY_PORT  5000

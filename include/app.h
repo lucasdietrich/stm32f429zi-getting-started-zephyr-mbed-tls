@@ -7,11 +7,18 @@
 #include "config.h"
 #include "discovery.h"
 
-#define TZ_SHIFT    DEFAULT_TIMEZONE_SHIFT
+/*___________________________________________________________________________*/
 
+#define TZ_SHIFT        DEFAULT_TIMEZONE_SHIFT
+
+#define SNTP_RETRIES    DEFAULT_SNTP_RETRIES
+#define SNTP_RETRY_INTERVAL_MS  DEFAULT_SNTP_RETRY_INTERVAL_MS
+
+/*___________________________________________________________________________*/
 
 struct app_config_t {
-    const char *name;           // application name
+    const char *name;                   // application name
+    uint32_t magic_number;
 };
 
 struct app_time_t {
@@ -19,33 +26,60 @@ struct app_time_t {
     uint32_t sntp_instant;      // local instant of the sntp request
 };
 
-// make this class a *singleton*
+static const char adecy_app_name[20] = "AdecyApp";
+
+/*___________________________________________________________________________*/
+
+/**
+ * @brief This class initialize the hardware and the the system main threads
+ * 
+ * This class is not yet a singleton, but should be changed in this way, check :
+ *  - https://lonkamikaze.github.io/2019/10/05/embedded-cxx-singletons
+ *  - https://www.embeddedrelated.com/showarticle/691.php
+ * 
+ */
 class c_application
 {
-protected:
+private:
+    /* SINGLETON FEATURES */
     static c_application * p_instance;
+    
+public:
 
-    c_discovery discovery;
+    // set this constructor private
+    // read about this : https://lonkamikaze.github.io/2019/10/05/embedded-cxx-singletons
+    c_application();    
 
-    void set_time(uint64_t abs_time, uint32_t sntp_instant);
+    /* SINGLETON FEATURES */
+    // two function 
+    static c_application& get_instance()
+    {
+        return *p_instance;
+    }
+
+    // c_application(const c_application&) = delete;               // prevent copy
+
+    // c_application& operator=(const c_application&) = delete;    // prevent assignment ?
+
+/*___________________________________________________________________________*/
     
     struct app_config_t config;
     struct app_time_t time;
-    struct tm time_infos;
 
+    // modules
+    c_discovery discovery;
 
-public:
-    c_application();
+/*___________________________________________________________________________*/
 
-    /*
-    static c_application* get_instance(void);
-    */
+    // init
+    void init();
 
-    uint64_t get_time(void);
+/*___________________________________________________________________________*/
 
-    struct tm * get_time_infos(void);
-
-    void init(void);
+    // TIME
+    void set_time(uint64_t abs_time, uint32_t sntp_instant);
+    uint64_t get_time() const;
+    void get_time_infos(struct tm *p_time_infos) const;
 };
 
 
