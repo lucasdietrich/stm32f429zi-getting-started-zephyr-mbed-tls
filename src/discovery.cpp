@@ -1,16 +1,18 @@
 #include <stdint.h>
-
 #include <errno.h>
 
 #include <net/socket.h>
 #include <net/net_core.h>
 #include <net/net_ip.h>
+#include <net/net_if.h>
 
 #include "discovery.h"
-
+#include "if.h"
+#include "app.h"
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(discovery, LOG_LEVEL_DBG);
+
 
 // todo replace with : K_THREAD_DEFINE
 K_THREAD_STACK_DEFINE(stack_discovery, DISCOVERY_THREAD_STACK_SIZE);
@@ -24,9 +26,17 @@ K_THREAD_DEFINE(
 */
 
 // for linker
+
+/*___________________________________________________________________________*/
+
 c_discovery * c_discovery::p_instance;
 
 struct k_thread c_discovery::discovery_thread;
+
+// class variables
+uint32_t c_discovery::counter;
+char c_discovery::recv_buffer[60];
+char c_discovery::send_buffer[60];
 
 void c_discovery::set_port(uint16_t port)
 {
@@ -47,6 +57,8 @@ c_discovery *c_discovery::get_instance(void)
     // todo
     // return c_discovery(nullptr);
 }
+
+/*___________________________________________________________________________*/
 
 void c_discovery::thread_start(void)
 {
@@ -103,13 +115,13 @@ void c_discovery::thread(void *, void *, void *)
 
     // process
     int received;
+    char *p_send_buffer;
+    int send_buffer_length;
 
-    int counter = 0;
+    counter = 0;
 
     struct sockaddr client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
-
-    char recv_buffer[60];
 
 	while (true) {
         LOG_INF("Waiting for UDP packets on port %d (%d)...", p_instance->port, sock);
@@ -135,8 +147,35 @@ void c_discovery::thread(void *, void *, void *)
             continue;
         }
 
+
+
+#if DISCOVERY_LOOPBACK
         // loopback
-        ret = sendto(sock, recv_buffer, received, 0, &client_addr, client_addr_len);
+        p_send_buffer = recv_buffer;
+        send_buffer_length = received;
+#else
+        // build response structure
+        struct udp_response response = {
+            .ip = get_ip(),
+            .str_ip = {0},
+            .time = {0, 0},
+        };
+
+        app_time_t * p_app_time = &c_application::get_instance().time;
+
+        memcpy(&response.time, (void *) p_app_time, sizeof(struct app_time_t));
+        get_ip(response.str_ip, NET_IPV4_ADDR_LEN);
+        
+        // set up send_buffer
+        send_buffer_length = sizeof(udp_response);
+        memcpy(send_buffer, &response, send_buffer_length);
+
+        LOG_DBG("sizeof(struct udp_response) = %d + %d + %d = %d", 4, NET_IPV4_ADDR_LEN, sizeof(struct app_time_t), sizeof(struct udp_response));
+
+        p_send_buffer = send_buffer;
+#endif
+
+        ret = sendto(sock, p_send_buffer, send_buffer_length, 0, &client_addr, client_addr_len);
 
         if (ret < 0)
         {
@@ -155,3 +194,5 @@ void c_discovery::thread(void *, void *, void *)
 
     // handle errors
 }
+
+/*___________________________________________________________________________*/

@@ -4,6 +4,7 @@
 
 #include "hw.h"
 #include "if.h"
+#include "discovery.h"
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(app, LOG_LEVEL_DBG);

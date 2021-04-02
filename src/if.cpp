@@ -162,3 +162,29 @@ void down_if(void) {
     net_if_down(iface);
 }
 
+uint32_t get_ip(void)
+{
+    struct net_if *iface;
+
+    iface = net_if_get_default();
+
+    // struct in_addr
+    uint32_t ip = (uint32_t) (iface->config.ip.ipv4->unicast[0].address.in_addr.s_addr);
+
+    return ip;
+}
+
+int get_ip(char * buffer, unsigned int buffer_len)
+{
+    if (buffer_len >= NET_IPV4_ADDR_LEN)
+    {
+        struct net_if *iface;
+
+        iface = net_if_get_default();
+
+        net_addr_ntop(AF_INET, &iface->config.ip.ipv4->unicast[0].address.in_addr, buffer, buffer_len);
+
+        return 0;
+    }
+    return -1;
+}

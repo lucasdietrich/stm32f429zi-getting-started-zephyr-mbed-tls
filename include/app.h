@@ -5,7 +5,12 @@
 #include <sys/timeutil.h>
 
 #include "config.h"
+#include "types.h"
 #include "discovery.h"
+
+/*___________________________________________________________________________*/
+
+class c_discovery;
 
 /*___________________________________________________________________________*/
 
@@ -16,17 +21,7 @@
 
 /*___________________________________________________________________________*/
 
-struct app_config_t {
-    const char *name;                   // application name
-    uint32_t magic_number;
-};
-
-struct app_time_t {
-    uint64_t abs_time;          // absolute time in seconds retrieved by SNTP
-    uint32_t sntp_instant;      // local instant of the sntp request
-};
-
-static const char adecy_app_name[20] = "AdecyApp";
+static const char adecy_app_name[DEFAULT_APP_NAME_MAX_LENGTH] = "AdecyApp";
 
 /*___________________________________________________________________________*/
 

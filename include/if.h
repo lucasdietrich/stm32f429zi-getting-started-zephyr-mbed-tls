@@ -28,6 +28,11 @@ void init_if(void);
 
 void down_if(void);
 
+// get IP functions
+uint32_t get_ip(void);
+
+int get_ip(char * buffer, unsigned int buffer_len);
+
 /**
  * @brief Get seconds from the the sntp time object
  * 

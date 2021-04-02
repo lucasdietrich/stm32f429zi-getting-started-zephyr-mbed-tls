@@ -3,21 +3,31 @@
 
 #include "config.h"
 
+#include <net/net_if.h>
+
+#include "types.h"
+
+/*___________________________________________________________________________*/
+
 #define DISCOVERY_PORT DEFAULT_DISCOVERY_PORT
 
 #define DISCOVERY_THREAD_PRIORITY       8
 #define DISCOVERY_THREAD_STACK_SIZE     750
 
+#define DISCOVERY_LOOPBACK  DEFAULT_DISCOVERY_LOOPBACK
+
+/*___________________________________________________________________________*/
+
 class c_discovery
 {
 private :
     uint16_t port;
-
-    uint16_t counter;
     
     static c_discovery * p_instance;
     
     static struct k_thread discovery_thread;
+
+/*___________________________________________________________________________*/
 
 public:
     c_discovery() {
@@ -31,9 +41,19 @@ public:
 
     static c_discovery *get_instance(void);
 
+    /*___________________________________________________________________________*/
+
+    static uint32_t counter;
+
+    static char recv_buffer[60];
+    static char send_buffer[60];
+
     static void thread_start(void);
 
     static void thread(void *, void *, void *);
+
+    /*___________________________________________________________________________*/
+
 };
 
 #endif
