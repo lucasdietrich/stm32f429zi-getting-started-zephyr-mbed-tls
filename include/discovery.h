@@ -10,23 +10,26 @@
 
 class c_discovery
 {
-protected :
+private :
     uint16_t port;
 
     uint16_t counter;
     
-    static c_discovery * instance;
+    static c_discovery * p_instance;
     
     static struct k_thread discovery_thread;
 
 public:
-    c_discovery(void) {
-        instance = this;
+    c_discovery() {
+        p_instance = this;
     }
+
 
     void set_port(uint16_t port);
 
-    static c_discovery * get_instance(void);
+    void show_port(void);
+
+    static c_discovery *get_instance(void);
 
     static void thread_start(void);
 

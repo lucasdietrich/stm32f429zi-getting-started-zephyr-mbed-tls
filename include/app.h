@@ -57,9 +57,9 @@ public:
         return *p_instance;
     }
 
-    // c_application(const c_application&) = delete;               // prevent copy
+    //c_application(const c_application&) = delete;               // prevent copy
 
-    // c_application& operator=(const c_application&) = delete;    // prevent assignment ?
+    //c_application& operator=(const c_application&) = delete;    // prevent assignment ?
 
 /*___________________________________________________________________________*/
     

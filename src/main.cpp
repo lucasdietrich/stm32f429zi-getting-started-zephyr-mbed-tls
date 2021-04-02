@@ -16,6 +16,8 @@ LOG_MODULE_REGISTER(main_log, LOG_LEVEL_DBG);
 void main(void)
 {    
     // get app singleton    
+    //c_application app = c_application();
+
     c_application app = c_application();
 
     // debug

@@ -70,8 +70,11 @@ void c_application::init()
     }
 
     // udp discovery thread start
-    discovery.set_port(DISCOVERY_PORT);
-    discovery.thread_start();
+
+    c_discovery::get_instance()->set_port(DISCOVERY_PORT);
+    c_discovery::get_instance()->thread_start();
+
+    c_discovery::get_instance()->show_port();
 }
 
 /*___________________________________________________________________________*/

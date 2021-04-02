@@ -15,23 +15,34 @@ LOG_MODULE_REGISTER(discovery, LOG_LEVEL_DBG);
 // todo replace with : K_THREAD_DEFINE
 K_THREAD_STACK_DEFINE(stack_discovery, DISCOVERY_THREAD_STACK_SIZE);
 
+// delay : https://github.com/zephyrproject-rtos/zephyr/issues/21305#issue-536508184
+/*
+K_THREAD_DEFINE(
+        discovery, DISCOVERY_THREAD_STACK_SIZE,
+        c_discovery::thread, NULL, NULL, NULL,
+        DISCOVERY_THREAD_PRIORITY, 0, 0); // see how to set K_FOREVER
+*/
+
 // for linker
-c_discovery * c_discovery::instance;
+c_discovery * c_discovery::p_instance;
+
 struct k_thread c_discovery::discovery_thread;
 
 void c_discovery::set_port(uint16_t port)
 {
-    port = port;
+    LOG_DBG("Settings port to %d", port);
+
+    this->port = port;
 }
 
-c_discovery * c_discovery::get_instance(void)
+void c_discovery::show_port(void)
 {
-    if (instance != nullptr)
-    {
-        return instance;
-    }
+    LOG_DBG("Port is %d", port);
+}
 
-    return nullptr;
+c_discovery *c_discovery::get_instance(void)
+{
+    return p_instance;
 
     // todo
     // return c_discovery(nullptr);
@@ -41,22 +52,26 @@ void c_discovery::thread_start(void)
 {
     // read about threads
     // https://developer.nordicsemi.com/nRF_Connect_SDK/doc/latest/zephyr/reference/kernel/threads/index.html
-    k_thread_create(&discovery_thread, stack_discovery,
+
+    k_tid_t thread_id = k_thread_create(&discovery_thread, stack_discovery,
                                             K_THREAD_STACK_SIZEOF(stack_discovery),
                                             c_discovery::thread,
                                             NULL, NULL, NULL,
-                                            DISCOVERY_THREAD_STACK_SIZE, 0, K_NO_WAIT);
+                                            DISCOVERY_THREAD_PRIORITY, 0, K_FOREVER);
 
-    //k_thread_start(discovery_rid);
+#if CONFIG_THREAD_NAME
+
+    k_thread_name_set(thread_id, "discovery");
+
+#endif
+    
+    k_thread_start(thread_id);
 }
 
 void c_discovery::thread(void *, void *, void *)
 {
     int ret;
     int sock;
-
-    // TODO USE VARIABLE
-    int port = DISCOVERY_PORT;
 
     // TODO OPTIMIZE INIT
 
@@ -65,7 +80,7 @@ void c_discovery::thread(void *, void *, void *)
 
 	(void)memset(&addr4, 0, sizeof(addr4));
 	addr4.sin_family = AF_INET;
-	addr4.sin_port = htons(port);
+	addr4.sin_port = htons(p_instance->port);
 
     // bind addr (general)
     struct sockaddr *bind_addr = (struct sockaddr *)&addr4;
@@ -97,7 +112,7 @@ void c_discovery::thread(void *, void *, void *)
     char recv_buffer[60];
 
 	while (true) {
-        LOG_INF("Waiting for UDP packets on port %d (%d)...", port, sock);
+        LOG_INF("Waiting for UDP packets on port %d (%d)...", p_instance->port, sock);
 
         received = recvfrom(sock, recv_buffer, sizeof(recv_buffer), 0, &client_addr, &client_addr_len);
 
