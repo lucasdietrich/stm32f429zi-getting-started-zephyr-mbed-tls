@@ -12,12 +12,10 @@ LOG_MODULE_REGISTER(main_log, LOG_LEVEL_DBG);
 #include "config.h"
 #include "app.h"
 
+/*___________________________________________________________________________*/
 
 void main(void)
-{    
-    // get app singleton    
-    //c_application app = c_application();
-
+{
     c_application app = c_application();
 
     // debug
@@ -41,7 +39,7 @@ void main(void)
                time_infos.tm_year + 1900, time_infos.tm_mon + 1, time_infos.tm_mday,
                time_infos.tm_hour, time_infos.tm_min, time_infos.tm_sec);
 
-        k_sleep(K_MSEC(1000));
+        k_sleep(K_MSEC(MAIN_LOOP_PERIOD));
     }
 }
 

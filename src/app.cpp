@@ -9,6 +9,8 @@
 #include <logging/log.h>
 LOG_MODULE_REGISTER(app, LOG_LEVEL_DBG);
 
+/*___________________________________________________________________________*/
+
 c_application* c_application::p_instance; //  = new c_application
 
 /*___________________________________________________________________________*/
@@ -21,7 +23,7 @@ c_application::c_application()  // private constructor
     p_instance = this;
     
     config.name = adecy_app_name;
-    config.magic_number = 0xADEC1;
+    config.magic_number = APP_MAGIC_NUMBER;
 }
 
 /*___________________________________________________________________________*/

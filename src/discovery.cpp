@@ -14,6 +14,8 @@
 LOG_MODULE_REGISTER(discovery, LOG_LEVEL_DBG);
 
 
+/*___________________________________________________________________________*/
+
 // todo replace with : K_THREAD_DEFINE
 K_THREAD_STACK_DEFINE(stack_discovery, DISCOVERY_THREAD_STACK_SIZE);
 
@@ -37,6 +39,8 @@ struct k_thread c_discovery::discovery_thread;
 uint32_t c_discovery::counter;
 char c_discovery::recv_buffer[60];
 char c_discovery::send_buffer[60];
+
+/*___________________________________________________________________________*/
 
 void c_discovery::set_port(uint16_t port)
 {
@@ -146,7 +150,6 @@ void c_discovery::thread(void *, void *, void *)
         {
             continue;
         }
-
 
 
 #if DISCOVERY_LOOPBACK

@@ -16,6 +16,8 @@ UDP discovery - v1
 
 # Questions, todo & Open Points
 
+## FileSystem / MQTT CLIENT / HTTP SERVER
+
 ## Get the MAC addr (can we change it ?)
 
 See how to get a static IP, does DHCP give a rdm IP or does the MAC addr change

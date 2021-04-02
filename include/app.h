@@ -8,20 +8,10 @@
 #include "types.h"
 #include "discovery.h"
 
-/*___________________________________________________________________________*/
-
-class c_discovery;
 
 /*___________________________________________________________________________*/
 
-#define TZ_SHIFT        DEFAULT_TIMEZONE_SHIFT
-
-#define SNTP_RETRIES    DEFAULT_SNTP_RETRIES
-#define SNTP_RETRY_INTERVAL_MS  DEFAULT_SNTP_RETRY_INTERVAL_MS
-
-/*___________________________________________________________________________*/
-
-static const char adecy_app_name[DEFAULT_APP_NAME_MAX_LENGTH] = "AdecyApp";
+static const char adecy_app_name[APP_NAME_MAX_LENGTH] = APP_NAME;
 
 /*___________________________________________________________________________*/
 
@@ -62,7 +52,7 @@ public:
     struct app_time_t time;
 
     // modules
-    c_discovery discovery;
+    c_discovery discovery;  // todo : c_discovery *discovery;
 
 /*___________________________________________________________________________*/
 

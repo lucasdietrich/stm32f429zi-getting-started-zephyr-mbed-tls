@@ -18,6 +18,8 @@
 #include <devicetree.h>
 #include <drivers/gpio.h>
 
+/*___________________________________________________________________________*/
+
 #define LED_GREEN_NODE DT_ALIAS(led0)
 
 // GREEN LED
@@ -57,6 +59,8 @@
 #error "Unsupported board: led2 devicetree alias is not defined"
 #endif
 
+/*___________________________________________________________________________*/
+
 /**
  * Types
  */
@@ -85,6 +89,8 @@ led_state_t& operator!(led_state_t &state)
     }
 }
 */
+
+/*___________________________________________________________________________*/
 
 /**
  * @brief Initialize leds (green, blue, red) and blink them during 1 second

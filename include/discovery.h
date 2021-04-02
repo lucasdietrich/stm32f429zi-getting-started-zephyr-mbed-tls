@@ -9,12 +9,12 @@
 
 /*___________________________________________________________________________*/
 
-#define DISCOVERY_PORT DEFAULT_DISCOVERY_PORT
+#define DISCOVERY_PORT 5001
+
+#define DISCOVERY_LOOPBACK  0
 
 #define DISCOVERY_THREAD_PRIORITY       8
 #define DISCOVERY_THREAD_STACK_SIZE     750
-
-#define DISCOVERY_LOOPBACK  DEFAULT_DISCOVERY_LOOPBACK
 
 /*___________________________________________________________________________*/
 

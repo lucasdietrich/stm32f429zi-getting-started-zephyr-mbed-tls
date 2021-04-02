@@ -1,13 +1,16 @@
 #include "if.h"
 #include "hw.h"
 
-
 #include <logging/log.h>
 LOG_MODULE_REGISTER(if, LOG_LEVEL_DBG);
+
+/*___________________________________________________________________________*/
 
 static struct net_mgmt_event_callback mgmt_cb[2];
 
 extern struct k_poll_signal signal_net_addr_up;
+
+/*___________________________________________________________________________*/
 
 static void net_event_handler(struct net_mgmt_event_callback *cb,
 		    uint32_t mgmt_event,
