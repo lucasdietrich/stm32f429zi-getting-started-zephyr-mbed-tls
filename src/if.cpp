@@ -20,13 +20,13 @@ static void net_event_handler(struct net_mgmt_event_callback *cb,
     {
 
     case NET_EVENT_IPV4_ADDR_DEL:
-        hw_set_led(led_t::GREEN, led_state_t::OFF);
+        hw_set_led(GREEN, led_state_t::OFF);
 
         LOG_INF("~ NET_EVENT_IPV4_ADDR_DEL");
         break;
 
     case NET_EVENT_IF_UP:
-        hw_set_led(led_t::RED, led_state_t::OFF);
+        hw_set_led(RED, led_state_t::OFF);
 
         LOG_INF("~ NET_EVENT_IF_UP");
 
@@ -35,8 +35,8 @@ static void net_event_handler(struct net_mgmt_event_callback *cb,
         break;
 
     case NET_EVENT_IF_DOWN:
-        hw_set_led(led_t::GREEN, led_state_t::OFF);
-        hw_set_led(led_t::RED, led_state_t::ON);
+        hw_set_led(GREEN, led_state_t::OFF);
+        hw_set_led(RED, led_state_t::ON);
 
         // todo when disconnectin the Ethernet Wire this happens, see how to handle ...
 
@@ -45,7 +45,7 @@ static void net_event_handler(struct net_mgmt_event_callback *cb,
         break;
 
     case NET_EVENT_IPV4_ADDR_ADD:
-        hw_set_led(led_t::GREEN, led_state_t::ON);
+        hw_set_led(GREEN, led_state_t::ON);
 
         LOG_INF("~ NET_EVENT_IPV4_ADDR_ADD");
 
