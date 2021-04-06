@@ -7,6 +7,7 @@
 #include "config.h"
 #include "types.h"
 #include "discovery.h"
+#include "http_server.h"
 
 
 /*___________________________________________________________________________*/
@@ -53,6 +54,8 @@ public:
 
     // modules
     c_discovery discovery;  // todo : c_discovery *discovery;
+
+    c_http_server http_server;
 
 /*___________________________________________________________________________*/
 

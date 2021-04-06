@@ -56,7 +56,13 @@ First 3 bytes changed in NOT RANDOM MAC mode (security ? lock ?)
 
 Python *scapy* library to test udp discovery : `from scapy.all import *` : `send(IP(dst="192.168.10.255")/UDP(dport=5000)/Raw(load="hello"))`
 
+## Interesting : Workqueues
+
+Read : https://docs.zephyrproject.org/1.9.0/kernel/threads/workqueues.html
+
 ## make it more robust
+
+## HTTP SERVER test : CONFIG_NET_BUF_POOL_USAGE
 
 ## see how to use/create static variables & set class singleton, set port and other parameters
 
@@ -81,6 +87,16 @@ Zephyr Scheduling : Interesting and important : https://docs.zephyrproject.org/1
 Polling API : https://docs.zephyrproject.org/1.9.0/kernel/other/polling.html
 
 About `main` thread : https://docs.zephyrproject.org/1.12.0/kernel/threads/system_threads.html
+
+## Flash & RAM
+
+```cpp
+const static uint32_t DATA[450000];  // stored in flashed
+```
+
+```cpp
+static uint32_t DATA[30000]; // stored in RAM
+```
 
 # Info
 

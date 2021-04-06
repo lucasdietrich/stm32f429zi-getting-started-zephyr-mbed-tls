@@ -5,6 +5,7 @@
 #include "hw.h"
 #include "if.h"
 #include "discovery.h"
+#include "http_server.h"
 
 #include <logging/log.h>
 LOG_MODULE_REGISTER(app, LOG_LEVEL_DBG);
@@ -48,7 +49,7 @@ void c_application::init()
                                  &signal_net_addr_up)
     };
 
-    // waiting to net if to have an ip address
+    // waiting to net *if* to have an ip address
     k_poll(events, 1, K_FOREVER);
 
     k_sleep(K_MSEC(250));
@@ -73,11 +74,13 @@ void c_application::init()
     }
 
     // udp discovery thread start
-
     c_discovery::get_instance()->set_port(DISCOVERY_PORT);
     c_discovery::get_instance()->thread_start();
 
     c_discovery::get_instance()->show_port();
+
+    // http server thread start
+    c_http_server::get_instance()->thread_start();
 }
 
 /*___________________________________________________________________________*/
@@ -94,6 +97,7 @@ void c_application::set_time(uint64_t abs_time, uint32_t sntp_instant)
     {
         time.sntp_instant = k_uptime_get() / MSEC_PER_SEC;  // current time in seconds
     }
+    
     time.abs_time = abs_time;
 }
 
