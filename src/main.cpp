@@ -7,7 +7,7 @@
 #include <sys/timeutil.h>
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(main_log, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(main_log, LOG_LEVEL_DBG); // LOG_LEVEL_DBG
 
 #include "config.h"
 #include "app.h"
@@ -33,6 +33,7 @@ void main(void)
 
     while(1) 
     {
+#if MAIN_LOOP_PERIOD
         app.get_time_infos(&time_infos);
 
         printf("Local (Europe/Paris) Date and time : %04d/%02d/%02d %02d:%02d:%02d\n",
@@ -40,6 +41,9 @@ void main(void)
                time_infos.tm_hour, time_infos.tm_min, time_infos.tm_sec);
 
         k_sleep(K_MSEC(MAIN_LOOP_PERIOD));
+#else
+        k_yield();
+#endif
     }
 }
 

@@ -13,7 +13,7 @@
 
 #define DISCOVERY_LOOPBACK  0
 
-#define DISCOVERY_THREAD_PRIORITY       8
+#define DISCOVERY_THREAD_PRIORITY       K_PRIO_PREEMPT(8)
 #define DISCOVERY_THREAD_STACK_SIZE     750
 
 /*___________________________________________________________________________*/

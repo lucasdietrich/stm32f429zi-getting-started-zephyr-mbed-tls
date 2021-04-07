@@ -13,7 +13,12 @@ LOG_MODULE_REGISTER(http_server, LOG_LEVEL_DBG);
 
 K_THREAD_STACK_DEFINE(stack_http_server, HTTP_SERVER_THREAD_STACK_SIZE);
 
-static const char content[] = "<b>Hello from STM32F429ZI</b>";
+static const char content[] = 
+"HTTP/1.1 200 OK\r\n"
+"Content-Type: text/html\r\n"
+"Connection: close\r\n\r\n"
+"<html><body><h3>Hello from stm32f429zi !</h3>"
+"</body></html>\n";
 
 /*___________________________________________________________________________*/
 
@@ -74,12 +79,12 @@ void c_http_server::thread(void *, void *, void *)
         return;
     }
 
-    ret = listen(serv, 5);
+    ret = listen(serv, 3);
     if (ret < 0)
     {
         LOG_ERR("Failed to listen TCP socket (%d): %d", serv, errno);
         return;
-    }
+    }    
 
     LOG_INF("HTTP server up (%d), waiting for connections on port %d ...", serv, HTTP_SERVER_BIND_PORT);
 
@@ -97,14 +102,15 @@ void c_http_server::thread(void *, void *, void *)
         int client = accept(serv, (struct sockaddr *) &client_addr, &client_addr_len);
         if (client < 0)
         {
-            LOG_ERR("Error in accept: %d - continuing\n", errno);
+            LOG_ERR("Error in accept: %d - continuing", errno);
             continue;
         }
 
         // convert to text form
         // https://man7.org/linux/man-pages/man3/inet_ntop.3.html
         inet_ntop(client_addr.sin_family, &client_addr.sin_addr, addr_str, sizeof(addr_str));
-        LOG_INF("Connection #%d from %s\n", counter++, addr_str);
+        
+        LOG_INF("Connection #%d from %s", counter++, log_strdup(addr_str));
 
         // discard
         while (1)
@@ -125,9 +131,11 @@ void c_http_server::thread(void *, void *, void *)
                     continue;
                 }
 
-                LOG_ERR("Got error %d when receiving from socket\n", errno);
+                LOG_ERR("Got error %d when receiving from socket", errno);
                 goto close_client;
             }
+
+            // looking for end
             if (req_state == 0 && c == '\r')
             {
                 req_state++;
@@ -142,6 +150,8 @@ void c_http_server::thread(void *, void *, void *)
             }
             else if (req_state == 3 && c == '\n')
             {
+                LOG_INF("Recv complete");
+
                 break;
             }
             else
@@ -159,24 +169,24 @@ void c_http_server::thread(void *, void *, void *)
 
             if (sent_len == -1)
             {
-                LOG_ERR("Error sending data to peer, errno: %d\n", errno);
+                LOG_ERR("Error sending data to peer, errno: %d", errno);
                 break;
             }
             data += sent_len;
             len -= sent_len;
         }
 
+        LOG_INF("Send complete");
+
 close_client:
         ret = close(client);
         if (ret == 0)
         {
-            LOG_INF("Connection from %s closed\n", addr_str);
+            LOG_INF("Connection from %s closed", log_strdup(addr_str));
         }
         else
         {
-            LOG_ERR("Got error %d while closing the "
-                "socket\n",
-                errno);
+            LOG_ERR("Got error %d while closing the socket", errno);
         }
     }
 }

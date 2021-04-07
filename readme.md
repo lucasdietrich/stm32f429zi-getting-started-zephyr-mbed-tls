@@ -1,5 +1,7 @@
 **this repo contains pictures and big O files, it is only a getting started project :)**
 
+[doc/http_server/http_server.md](./doc/http_server/http_server.md)
+
 # Nucleo f429zi
 
 Current system model
@@ -158,3 +160,9 @@ Waiting, I'm setting `CONFIG_NET_CONFIG_AUTO_INIT=y` and don't calling these fun
 ### 002. <err> os: CONFIG_MINIMAL_LIBC_MALLOC_ARENA_SIZE is 0
 
 Need
+
+### CONFIG_LOG_BUFFER_SIZE=1024 (default)
+
+Increase *CONFIG_LOG_BUFFER_SIZE* size if log message drops as following
+
+![log_message_dropped.png](./pics/log_message_dropped.png)

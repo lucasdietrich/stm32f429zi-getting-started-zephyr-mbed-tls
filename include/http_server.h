@@ -4,7 +4,8 @@
 #define HTTP_SERVER_BIND_PORT       8080
 
 #define HTTP_SERVER_THREAD_STACK_SIZE       8192
-#define HTTP_SERVER_THREAD_PRIORITY         8
+#define HTTP_SERVER_THREAD_PRIORITY         K_PRIO_PREEMPT(8)
+
 
 /*___________________________________________________________________________*/
 
