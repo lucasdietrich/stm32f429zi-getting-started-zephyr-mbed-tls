@@ -1,6 +1,8 @@
 #ifndef _HTTP_SERVER_H
 #define _HTTP_SERVER_H
 
+#include <sys/types.h>
+
 #define HTTP_SERVER_BIND_PORT       8080
 
 #define HTTP_SERVER_THREAD_STACK_SIZE       8192
@@ -31,6 +33,13 @@ public:
     static void thread_start();
 
     static void thread(void *, void *, void *);
+
+/*___________________________________________________________________________*/
+    static char recv_buffer[512];
+    static char *send_buffer;
+
+    static ssize_t p_recv;
+    static ssize_t p_send;
 };
 
 #endif

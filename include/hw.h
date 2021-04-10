@@ -17,6 +17,9 @@
 #include <device.h>
 #include <devicetree.h>
 #include <drivers/gpio.h>
+
+#include "config.h"
+
 /*___________________________________________________________________________*/
 
 #define LED_GREEN_NODE DT_ALIAS(led0)

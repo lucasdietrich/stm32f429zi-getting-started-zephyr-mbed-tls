@@ -51,6 +51,7 @@ public:
     
     struct app_config_t config;
     struct app_time_t time;
+    struct app_stats_t stats;
 
     // modules
     c_discovery discovery;  // todo : c_discovery *discovery;

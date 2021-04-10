@@ -18,6 +18,10 @@ struct __attribute__((__packed__)) app_time_t {
     uint32_t sntp_instant;      // local instant of the sntp request
 };
 
+struct __attribute__((__packed__)) app_stats_t {
+    uint64_t ready_time;        // instant where the application is totally up, devide by MSEC_PER_SEC to get value in second
+};
+
 /*___________________________________________________________________________*/
 
 // UDP DISCOVERY
@@ -39,6 +43,7 @@ struct __attribute__((__packed__)) udp_response
     uint32_t ip;
     char str_ip[NET_IPV4_ADDR_LEN];
     struct app_time_t time;
+    struct app_stats_t stats;
 };
 
 /*___________________________________________________________________________*/

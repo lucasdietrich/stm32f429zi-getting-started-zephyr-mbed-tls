@@ -165,8 +165,10 @@ void c_discovery::thread(void *, void *, void *)
         };
 
         app_time_t * p_app_time = &c_application::get_instance().time;
+        app_stats_t * p_app_stats = &c_application::get_instance().stats;
 
         memcpy(&response.time, (void *) p_app_time, sizeof(struct app_time_t));
+        memcpy(&response.stats, (void *) p_app_stats, sizeof(struct app_stats_t));
         get_ip(response.str_ip, NET_IPV4_ADDR_LEN);
         
         // set up send_buffer

@@ -81,6 +81,8 @@ void c_application::init()
 
     // http server thread start
     c_http_server::get_instance()->thread_start();
+
+    stats.ready_time = k_uptime_get();
 }
 
 /*___________________________________________________________________________*/

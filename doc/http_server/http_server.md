@@ -107,3 +107,19 @@ Local (Europe/Paris) Date and time : 2021/04/07 23:19:18
 [00:01:30.105,000] <inf> http_server: Connection from 192.168.10.52 closed
 Local (Europe/Paris) Date and time : 2021/04/07 23:19:48
 ```
+
+## python *requests* with URI
+
+```
+import requests
+
+s = requests.get("http://192.168.10.233:8080/params/adecy/list?au=23")
+
+print(s, len(s.text), s.text)
+```
+
+The URI `/params/adecy/list?au=23` appears just after the `GET` in the HTTP request.
+
+## Long request
+
+*see branch big_http_response for project configuration*

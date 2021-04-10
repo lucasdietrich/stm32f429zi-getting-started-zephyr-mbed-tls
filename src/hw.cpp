@@ -22,7 +22,8 @@ void hw_init_leds(void) {
 
     bool leds_state = true;
 
-	for(uint_fast8_t i = 0; i < 10; i++)
+    // blink
+	for(uint_fast8_t i = 0; i < HW_INIT_LED_MODE; i++)
     {
         for(uint_fast8_t led = 0; led < 3; led++)
         {
@@ -30,7 +31,7 @@ void hw_init_leds(void) {
         }
 		leds_state = !leds_state;
         
-		k_sleep(K_MSEC(100));
+		k_sleep(K_MSEC(HW_INIT_LED_DELAY));
 	}
 }
 void hw_set_led(led_e led, led_state_t state)

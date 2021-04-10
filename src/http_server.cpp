@@ -18,7 +18,7 @@ static const char content[] =
 "Content-Type: text/html\r\n"
 "Connection: close\r\n\r\n"
 "<html><body><h3>Hello from stm32f429zi !</h3>"
-"</body></html>\n";
+"</body></html>";
 
 /*___________________________________________________________________________*/
 
@@ -27,6 +27,12 @@ c_http_server *c_http_server::p_instance;
 struct k_thread c_http_server::http_server_thread;
 
 uint32_t c_http_server::counter = 0u;
+
+char c_http_server::recv_buffer[512];
+char *c_http_server::send_buffer;
+
+ssize_t c_http_server::p_recv = 0u;
+ssize_t c_http_server::p_send = 0u;
 
 /*___________________________________________________________________________*/
 
@@ -95,8 +101,6 @@ void c_http_server::thread(void *, void *, void *)
         struct sockaddr_in client_addr;
         socklen_t client_addr_len = sizeof(client_addr);
         char addr_str[32];
-        int req_state = 0;
-        const char *data;
         size_t len;
 
         int client = accept(serv, (struct sockaddr *) &client_addr, &client_addr_len);
@@ -106,25 +110,25 @@ void c_http_server::thread(void *, void *, void *)
             continue;
         }
 
+/*___________________________________________________________________________*/
+
         // convert to text form
         // https://man7.org/linux/man-pages/man3/inet_ntop.3.html
         inet_ntop(client_addr.sin_family, &client_addr.sin_addr, addr_str, sizeof(addr_str));
         
         LOG_INF("Connection #%d from %s", counter++, log_strdup(addr_str));
 
+        p_recv = 0u;
+        p_send = 0u;
+
         // discard
         while (1)
         {
-            ssize_t r;
-            char c;
+            ssize_t recv_len;
 
-            r = recv(client, &c, 1, 0);
-            if (r == 0)
-            {
-                goto close_client;
-            }
+            recv_len = recv(client, &recv_buffer[p_recv], 500, 0);
 
-            if (r < 0)
+            if (recv_len < 0)
             {
                 if (errno == EAGAIN || errno == EINTR)
                 {
@@ -135,20 +139,15 @@ void c_http_server::thread(void *, void *, void *)
                 goto close_client;
             }
 
-            // looking for end
-            if (req_state == 0 && c == '\r')
+            if (recv_len == 0)
             {
-                req_state++;
+                break;
             }
-            else if (req_state == 1 && c == '\n')
-            {
-                req_state++;
-            }
-            else if (req_state == 2 && c == '\r')
-            {
-                req_state++;
-            }
-            else if (req_state == 3 && c == '\n')
+
+            p_recv += recv_len;
+
+            // HTTP request termination pattern
+            if (0u == strncmp(&recv_buffer[p_recv - 4], "\r\n\r\n", 4u))
             {
                 LOG_INF("Recv complete");
 
@@ -156,23 +155,28 @@ void c_http_server::thread(void *, void *, void *)
             }
             else
             {
-                req_state = 0;
+                goto close_client;
             }
         }
 
         // send response
-        data = content;
-        len = sizeof(content);
+        send_buffer = (char*) content;
+        len = strlen(content);
+        p_send = 0u;
+
         while (len)
         {
-            int sent_len = send(client, data, len, 0);
+            int sent_len;
 
-            if (sent_len == -1)
+            sent_len = send(client, &send_buffer[p_send], len, 0);
+
+            if (sent_len < 0)
             {
                 LOG_ERR("Error sending data to peer, errno: %d", errno);
                 break;
             }
-            data += sent_len;
+
+            p_send += sent_len;
             len -= sent_len;
         }
 
