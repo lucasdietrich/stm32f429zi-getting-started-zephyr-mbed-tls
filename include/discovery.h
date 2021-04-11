@@ -53,7 +53,8 @@ public:
     static void thread(void *, void *, void *);
 
     /*___________________________________________________________________________*/
-
+    
+    static inline size_t build_response(void);
 };
 
 #endif

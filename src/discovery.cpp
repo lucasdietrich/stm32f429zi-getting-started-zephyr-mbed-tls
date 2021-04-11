@@ -157,27 +157,9 @@ void c_discovery::thread(void *, void *, void *)
         p_send_buffer = recv_buffer;
         send_buffer_length = received;
 #else
-        // build response structure
-        struct udp_response response = {
-            .ip = get_ip(),
-            .str_ip = {0},
-            .time = {0, 0},
-        };
-
-        app_time_t * p_app_time = &c_application::get_instance().time;
-        app_stats_t * p_app_stats = &c_application::get_instance().stats;
-
-        memcpy(&response.time, (void *) p_app_time, sizeof(struct app_time_t));
-        memcpy(&response.stats, (void *) p_app_stats, sizeof(struct app_stats_t));
-        get_ip(response.str_ip, NET_IPV4_ADDR_LEN);
-        
-        // set up send_buffer
-        send_buffer_length = sizeof(udp_response);
-        memcpy(send_buffer, &response, send_buffer_length);
-
-        LOG_DBG("sizeof(struct udp_response) = %d + %d + %d = %d", 4, NET_IPV4_ADDR_LEN, sizeof(struct app_time_t), sizeof(struct udp_response));
-
+        // udp response
         p_send_buffer = send_buffer;
+        send_buffer_length = build_response();
 #endif
 
         ret = sendto(sock, p_send_buffer, send_buffer_length, 0, &client_addr, client_addr_len);
@@ -201,3 +183,25 @@ void c_discovery::thread(void *, void *, void *)
 }
 
 /*___________________________________________________________________________*/
+
+inline size_t c_discovery::build_response(void)
+{
+    // build response structure
+    struct udp_response response;
+
+    app_time_t *p_app_time = &c_application::get_instance().time;
+    app_stats_t *p_app_stats = &c_application::get_instance().stats;
+
+    response.ip = get_ip();
+    
+    memcpy(&response.time, (void *)p_app_time, sizeof(struct app_time_t));
+    memcpy(&response.stats, (void *)p_app_stats, sizeof(struct app_stats_t));
+    get_ip(response.str_ip, NET_IPV4_ADDR_LEN);
+
+    // set up send_buffer
+    memcpy(send_buffer, &response, sizeof(udp_response));
+
+    LOG_DBG("sizeof(struct udp_response) = %d + %d + %d = %d", 4, NET_IPV4_ADDR_LEN, sizeof(struct app_time_t), sizeof(struct udp_response));
+
+    return sizeof(udp_response);
+}

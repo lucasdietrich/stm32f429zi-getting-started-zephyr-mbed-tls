@@ -28,11 +28,13 @@ struct k_thread c_http_server::http_server_thread;
 
 uint32_t c_http_server::counter = 0u;
 
-char c_http_server::recv_buffer[512];
+char c_http_server::recv_buffer[HTTP_SERVER_RECV_BUFFER_SIZE];
 char *c_http_server::send_buffer;
 
 ssize_t c_http_server::p_recv = 0u;
 ssize_t c_http_server::p_send = 0u;
+
+c_http_request c_http_server::request = c_http_request();
 
 /*___________________________________________________________________________*/
 
@@ -121,42 +123,22 @@ void c_http_server::thread(void *, void *, void *)
         p_recv = 0u;
         p_send = 0u;
 
-        // discard
-        while (1)
+        // read request
+        ret = read_request(client);
+        if (ret != 0)
         {
-            ssize_t recv_len;
+            LOG_INF("failed to read request");
 
-            recv_len = recv(client, &recv_buffer[p_recv], 500, 0);
+            goto close_client;
+        }
 
-            if (recv_len < 0)
-            {
-                if (errno == EAGAIN || errno == EINTR)
-                {
-                    continue;
-                }
+        // parse request
+        ret = parse_request(&request);
+        if (ret != 0)
+        {
+            LOG_INF("failed to parse request");
 
-                LOG_ERR("Got error %d when receiving from socket", errno);
-                goto close_client;
-            }
-
-            if (recv_len == 0)
-            {
-                break;
-            }
-
-            p_recv += recv_len;
-
-            // HTTP request termination pattern
-            if (0u == strncmp(&recv_buffer[p_recv - 4], "\r\n\r\n", 4u))
-            {
-                LOG_INF("Recv complete");
-
-                break;
-            }
-            else
-            {
-                goto close_client;
-            }
+            goto close_client;
         }
 
         // send response
@@ -193,4 +175,114 @@ close_client:
             LOG_ERR("Got error %d while closing the socket", errno);
         }
     }
+}
+
+inline int c_http_server::read_request(int client)
+{
+    int max_len = sizeof(recv_buffer) - 1; // keep space for termination string
+
+    recv_buffer[sizeof(recv_buffer) - 1] = 0;
+
+    while (1)
+    {
+        ssize_t recv_len;
+
+        recv_len = recv(client, &recv_buffer[p_recv], max_len - p_recv, 0);
+
+        if (recv_len < 0)
+        {
+            if (errno == EAGAIN || errno == EINTR)
+            {
+                continue;
+            }
+
+            LOG_ERR("Got error %d when receiving from socket", errno);
+
+            return -1;
+        }
+
+        p_recv += recv_len;
+
+        // HTTP request termination pattern
+        if (0u == strncmp(&recv_buffer[p_recv - 4], "\r\n\r\n", 4u))
+        {
+            LOG_INF("Recv complete, termination pattern found, size : %d", p_recv);
+
+            break;
+        }
+        else if (recv_len == 0)
+        {
+            LOG_ERR("recv_len = 0 but termination pattern not found");
+
+            return -1;
+        }
+        else if (max_len == p_recv)
+        {
+            LOG_ERR("buffer full but termination pattern not found");
+
+            return -1;
+        }
+    }
+
+    return 0u;
+}
+
+inline int c_http_server::parse_request(c_http_request *request)
+{
+    char * space;
+    char * c_recv_buffer = recv_buffer; // cursor on recv_buffer
+
+    size_t section_len;
+
+    // parse method
+    space = strchr(c_recv_buffer, ' ');
+    section_len = space - c_recv_buffer;
+
+    LOG_INF("method len is %u", section_len);
+    
+    if(0 == strncmp(recv_buffer, "GET", 3))
+    {
+        request->method = c_http_request::method_t::GET;
+    } else if(0 == strncmp(recv_buffer, "POST", 4))
+    {
+        request->method = c_http_request::method_t::POST;
+    }
+    else if (0 == strncmp(recv_buffer, "PUT", 3))
+    {
+        request->method = c_http_request::method_t::PUT;
+    }
+    else if (0 == strncmp(recv_buffer, "DEL", 3))
+    {
+        request->method = c_http_request::method_t::DEL;
+    }
+    else
+    {
+        LOG_ERR("unknown method");
+
+        return -1;
+    }
+
+    // parse url
+    c_recv_buffer = space + 1u;
+    space = strchr(c_recv_buffer, ' ');
+    section_len = space - c_recv_buffer;
+
+    LOG_INF("url len is %u", section_len);
+
+    if (section_len < sizeof(request->url))
+    {
+        strncpy(request->url, c_recv_buffer, section_len);
+    }
+    else
+    {   
+        LOG_ERR("URL too long");
+
+        return -1;
+    }
+
+    // parse headers
+
+    // parse body
+
+    return 0u;
 }
