@@ -34,7 +34,6 @@ public:
         p_instance = this;
     }
 
-
     void set_port(uint16_t port);
 
     void show_port(void);

@@ -2,6 +2,7 @@
 #define _HTTP_SERVER_H
 
 #include <sys/types.h>
+
 #include "http_request.h"
 
 #define HTTP_SERVER_BIND_PORT               8080
@@ -49,7 +50,7 @@ public:
 
     static inline int read_request(int client);
 
-    static inline int parse_request(c_http_request *request);
+    static inline size_t parse_request(const char *buffer, size_t len, c_http_request *request);
 };
 
 #endif

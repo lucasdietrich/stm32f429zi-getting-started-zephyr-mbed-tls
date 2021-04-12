@@ -5,6 +5,7 @@
 #include <net/net_core.h>
 #include <net/net_ip.h>
 #include <net/net_if.h>
+#include <net/http_parser.h>
 
 #include "http_server.h"
 
@@ -133,7 +134,7 @@ void c_http_server::thread(void *, void *, void *)
         }
 
         // parse request
-        ret = parse_request(&request);
+        ret = parse_request(recv_buffer, p_recv, &request);
         if (ret != 0)
         {
             LOG_INF("failed to parse request");
@@ -227,62 +228,29 @@ inline int c_http_server::read_request(int client)
     return 0u;
 }
 
-inline int c_http_server::parse_request(c_http_request *request)
+
+int http_on_url(struct http_parser *, const char *at, size_t length)
 {
-    char * space;
-    char * c_recv_buffer = recv_buffer; // cursor on recv_buffer
+    LOG_HEXDUMP_DBG(at, length, "on_url");
 
-    size_t section_len;
+    return 0;
+}
 
-    // parse method
-    space = strchr(c_recv_buffer, ' ');
-    section_len = space - c_recv_buffer;
+inline size_t c_http_server::parse_request(const char *buffer, size_t len, c_http_request *request)
+{
+    LOG_HEXDUMP_INF(buffer, len, "parse_request");
 
-    LOG_INF("method len is %u", section_len);
-    
-    if(0 == strncmp(recv_buffer, "GET", 3))
-    {
-        request->method = c_http_request::method_t::GET;
-    } else if(0 == strncmp(recv_buffer, "POST", 4))
-    {
-        request->method = c_http_request::method_t::POST;
-    }
-    else if (0 == strncmp(recv_buffer, "PUT", 3))
-    {
-        request->method = c_http_request::method_t::PUT;
-    }
-    else if (0 == strncmp(recv_buffer, "DEL", 3))
-    {
-        request->method = c_http_request::method_t::DEL;
-    }
-    else
-    {
-        LOG_ERR("unknown method");
+    http_parser parser;
 
-        return -1;
-    }
+    http_parser_init(&parser, http_parser_type::HTTP_REQUEST);
 
-    // parse url
-    c_recv_buffer = space + 1u;
-    space = strchr(c_recv_buffer, ' ');
-    section_len = space - c_recv_buffer;
+    const http_parser_settings settings = {
+        .on_url = http_on_url
+    };
 
-    LOG_INF("url len is %u", section_len);
+    size_t parsed = http_parser_execute(&parser, &settings, buffer, len);
 
-    if (section_len < sizeof(request->url))
-    {
-        strncpy(request->url, c_recv_buffer, section_len);
-    }
-    else
-    {   
-        LOG_ERR("URL too long");
+    LOG_INF("HTTP request %s : parsed %d/%d errno %d", log_strdup(http_method_str((enum http_method) parser.method)), parsed, len, parser.http_errno);
 
-        return -1;
-    }
-
-    // parse headers
-
-    // parse body
-
-    return 0u;
+    return parsed;
 }
