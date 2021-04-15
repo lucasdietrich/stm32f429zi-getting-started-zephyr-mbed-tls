@@ -228,10 +228,20 @@ inline int c_http_server::read_request(int client)
     return 0u;
 }
 
+static char http_current_url[120];
 
 int http_on_url(struct http_parser *, const char *at, size_t length)
 {
     LOG_HEXDUMP_DBG(at, length, "on_url");
+
+    if (length >= ARRAY_SIZE(http_current_url))
+    {
+        length = ARRAY_SIZE(http_current_url) - 1;
+    }
+
+    strncpy(http_current_url, at, length);
+
+    http_current_url[length] = '\0';
 
     return 0;
 }
@@ -250,7 +260,11 @@ inline size_t c_http_server::parse_request(const char *buffer, size_t len, c_htt
 
     size_t parsed = http_parser_execute(&parser, &settings, buffer, len);
 
-    LOG_INF("HTTP request %s : parsed %d/%d errno %d", log_strdup(http_method_str((enum http_method) parser.method)), parsed, len, parser.http_errno);
+    // LOGGING
+    const char *method_str = log_strdup(http_method_str((enum http_method) parser.method));
+    const char *url_str = log_strdup(http_current_url);
+
+    LOG_INF("HTTP request %s %s : parsed %d/%d errno %d", method_str, url_str, parsed, len, parser.http_errno);
 
     return parsed;
 }
