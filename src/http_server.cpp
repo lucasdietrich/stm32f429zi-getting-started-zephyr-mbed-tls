@@ -5,7 +5,6 @@
 #include <net/net_core.h>
 #include <net/net_ip.h>
 #include <net/net_if.h>
-#include <net/http_parser.h>
 
 #include "http_server.h"
 
@@ -176,6 +175,9 @@ close_client:
             LOG_ERR("Got error %d while closing the socket", errno);
         }
     }
+
+close_serv:
+    close(serv);
 }
 
 inline int c_http_server::read_request(int client)
