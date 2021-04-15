@@ -263,8 +263,9 @@ inline size_t c_http_server::parse_request(const char *buffer, size_t len, c_htt
     // LOGGING
     const char *method_str = log_strdup(http_method_str((enum http_method) parser.method));
     const char *url_str = log_strdup(http_current_url);
+    const char *errno_str = log_strdup(http_errno_name(HTTP_PARSER_ERRNO(&parser)));
 
-    LOG_INF("HTTP request %s %s : parsed %d/%d errno %d", method_str, url_str, parsed, len, parser.http_errno);
+    LOG_INF("HTTP request %s %s : parsed %d/%d errno %d:%s", method_str, url_str, parsed, len, parser.http_errno, errno_str);
 
     return parsed;
 }
