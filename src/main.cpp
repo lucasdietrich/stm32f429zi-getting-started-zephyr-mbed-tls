@@ -7,7 +7,7 @@
 #include <sys/timeutil.h>
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(main_log, LOG_LEVEL_DBG); // LOG_LEVEL_DBG
+LOG_MODULE_REGISTER(main_log, LOG_LEVEL_INF); // LOG_LEVEL_DBG
 
 #include "config.h"
 #include "app.h"
@@ -27,7 +27,7 @@ void main(void)
     // init app
     app.init();
 
-    LOG_INF("System fully initialized");
+    LOG_INF("Application up & running");
 
     struct tm time_infos;
 

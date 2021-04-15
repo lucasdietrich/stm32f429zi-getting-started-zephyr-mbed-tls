@@ -10,7 +10,7 @@
 #include "http_server.h"
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(http_server, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(http_server, LOG_LEVEL_INF);
 
 K_THREAD_STACK_DEFINE(stack_http_server, HTTP_SERVER_THREAD_STACK_SIZE);
 
@@ -95,7 +95,7 @@ void c_http_server::thread(void *, void *, void *)
         return;
     }    
 
-    LOG_INF("HTTP server up (%d), waiting for connections on port %d ...", serv, HTTP_SERVER_BIND_PORT);
+    LOG_INF("HTTP server up (%d), waiting for TCP connections on port %d ...", serv, HTTP_SERVER_BIND_PORT);
 
     while (1)
     {
@@ -128,16 +128,16 @@ void c_http_server::thread(void *, void *, void *)
         ret = read_request(client);
         if (ret != 0)
         {
-            LOG_INF("failed to read request");
+            LOG_ERR("failed to read request");
 
             goto close_client;
         }
 
         // parse request
         ret = parse_request(recv_buffer, p_recv, &request);
-        if (ret != 0)
+        if (ret <= 0)
         {
-            LOG_INF("failed to parse request");
+            LOG_ERR("failed to parse request");
 
             goto close_client;
         }
@@ -163,13 +163,13 @@ void c_http_server::thread(void *, void *, void *)
             len -= sent_len;
         }
 
-        LOG_INF("Send complete");
+        LOG_DBG("Send complete");
 
 close_client:
         ret = close(client);
         if (ret == 0)
         {
-            LOG_INF("Connection from %s closed", log_strdup(addr_str));
+            LOG_DBG("Connection from %s closed", log_strdup(addr_str));
         }
         else
         {
@@ -207,7 +207,7 @@ inline int c_http_server::read_request(int client)
         // HTTP request termination pattern
         if (0u == strncmp(&recv_buffer[p_recv - 4], "\r\n\r\n", 4u))
         {
-            LOG_INF("Recv complete, termination pattern found, size : %d", p_recv);
+            LOG_DBG("Recv complete, termination pattern found, size : %d", p_recv);
 
             break;
         }
@@ -238,7 +238,7 @@ int http_on_url(struct http_parser *, const char *at, size_t length)
 
 inline size_t c_http_server::parse_request(const char *buffer, size_t len, c_http_request *request)
 {
-    LOG_HEXDUMP_INF(buffer, len, "parse_request");
+    LOG_HEXDUMP_DBG(buffer, len, "parse_request");
 
     http_parser parser;
 

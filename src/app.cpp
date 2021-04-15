@@ -8,7 +8,7 @@
 #include "http_server.h"
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(app, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(app, LOG_LEVEL_INF);
 
 /*___________________________________________________________________________*/
 
@@ -59,7 +59,7 @@ void c_application::init()
     // 3 retries
     for(uint_fast8_t retries = SNTP_RETRIES; retries > 0; retries--)
     {
-        LOG_INF("SNTP try %d / %d", 1 + SNTP_RETRIES - retries, SNTP_RETRIES);
+        LOG_DBG("SNTP try %d / %d", 1 + SNTP_RETRIES - retries, SNTP_RETRIES);
 
         abs_time_secs = get_sntp_time();
 

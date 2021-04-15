@@ -22,7 +22,7 @@
 #if HW_INIT_LED_MODE == HW_INIT_LED_BLINK
 #define HW_INIT_LED_DELAY               100
 #else
-#define HW_INIT_LED_DELAY               800
+#define HW_INIT_LED_DELAY               250
 #endif
 
 /*___________________________________________________________________________*/

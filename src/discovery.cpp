@@ -11,7 +11,7 @@
 #include "app.h"
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(discovery, LOG_LEVEL_DBG);
+LOG_MODULE_REGISTER(discovery, LOG_LEVEL_INF);
 
 
 /*___________________________________________________________________________*/
@@ -128,7 +128,7 @@ void c_discovery::thread(void *, void *, void *)
     socklen_t client_addr_len = sizeof(client_addr);
 
 	while (true) {
-        LOG_INF("Waiting for UDP packets on port %d (%d)...", p_instance->port, sock);
+        LOG_INF("UDP server up (%d), waiting for UDP packets on port %d ...", sock, p_instance->port);
 
         received = recvfrom(sock, recv_buffer, sizeof(recv_buffer), 0, &client_addr, &client_addr_len);
 
@@ -144,7 +144,9 @@ void c_discovery::thread(void *, void *, void *)
             // https://www.qnx.com/developers/docs/6.5.0SP1.update/com.qnx.doc.neutrino_lib_ref/a/atomic_add.html
             // atomic_add(&data->udp.bytes_received, received);
 
-            LOG_INF("received %d bytes", received);
+            LOG_INF("UDP Discovery request received");
+
+            LOG_DBG("received %d bytes", received);
         }
         else // received = 0 : TIMEOUT
         {
@@ -173,7 +175,7 @@ void c_discovery::thread(void *, void *, void *)
 
         LOG_DBG("UDP (%d): Received and replied with %d bytes", sock, received);
 
-        LOG_INF("%d UDP: Sent %u packets", sock, ++counter);
+        LOG_DBG("%d UDP: Sent %u packets", sock, ++counter);
     }
 
     // relinquish the CPU (but no delay)
