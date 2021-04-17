@@ -124,13 +124,14 @@ void c_discovery::thread(void *, void *, void *)
 
     counter = 0;
 
-    struct sockaddr client_addr;
+    struct sockaddr_in client_addr;
     socklen_t client_addr_len = sizeof(client_addr);
 
-	while (true) {
-        LOG_INF("UDP server up (%d), waiting for UDP packets on port %d ...", sock, p_instance->port);
+    LOG_INF("UDP server up (%d), waiting for UDP packets on port %d ...", sock, p_instance->port);
 
-        received = recvfrom(sock, recv_buffer, sizeof(recv_buffer), 0, &client_addr, &client_addr_len);
+	while (true) {
+
+        received = recvfrom(sock, recv_buffer, sizeof(recv_buffer), 0, (struct sockaddr*) &client_addr, &client_addr_len);
 
         if (received < 0)
         {
@@ -144,9 +145,13 @@ void c_discovery::thread(void *, void *, void *)
             // https://www.qnx.com/developers/docs/6.5.0SP1.update/com.qnx.doc.neutrino_lib_ref/a/atomic_add.html
             // atomic_add(&data->udp.bytes_received, received);
 
-            LOG_INF("UDP Discovery request received");
+            char addr_str[NET_IPV4_ADDR_LEN];
 
-            LOG_DBG("received %d bytes", received);
+            // convert to text form
+            // https://man7.org/linux/man-pages/man3/inet_ntop.3.html
+            inet_ntop(client_addr.sin_family, &client_addr.sin_addr, addr_str, sizeof(addr_str));
+
+            LOG_INF("UDP Discovery request received from %s [udp pkt len %d]", log_strdup(addr_str), received);
         }
         else // received = 0 : TIMEOUT
         {
@@ -164,7 +169,7 @@ void c_discovery::thread(void *, void *, void *)
         send_buffer_length = build_response();
 #endif
 
-        ret = sendto(sock, p_send_buffer, send_buffer_length, 0, &client_addr, client_addr_len);
+        ret = sendto(sock, p_send_buffer, send_buffer_length, 0, (const struct sockaddr*) &client_addr, client_addr_len);
 
         if (ret < 0)
         {
