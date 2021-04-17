@@ -12,53 +12,40 @@
  *  curl -v http://192.168.10.233:8080/url
  */
 
-// CONSOLE
-// [00:00:46.489,000] <inf> http_server: Connection #0 from 192.168.10.52
-// [00:00:46.489,000] <inf> http_server: Recv complete, termination pattern found, size : 83
-// [00:00:46.490,000] <inf> http_server: parse_request
-//                                       47 45 54 20 2f 20 48 54  54 50 2f 31 2e 31 0d 0a |GET / HT TP/1.1..
-//                                       48 6f 73 74 3a 20 31 39  32 2e 31 36 38 2e 31 30 |Host: 19 2.168.10
-//                                       2e 32 33 33 3a 38 30 38  30 0d 0a 55 73 65 72 2d |.233:808 0..User-
-//                                       41 67 65 6e 74 3a 20 63  75 72 6c 2f 37 2e 37 34 |Agent: c url/7.74
-//                                       2e 30 0d 0a 41 63 63 65  70 74 3a 20 2a 2f 2a 0d |.0..Acce pt: */*.
-//                                       0a 0d 0a                                         |...
-// [00:00:46.490,000] <dbg> http_server: on_url
-//                                       2f                                               |/
-// [00:00:46.490,000] <inf> http_server: HTTP request GET : parsed 83/83 errno 0
-// [00:00:46.490,000] <inf> http_server: Send complete
-// [00:00:46.490,000] <inf> http_server: Connection from 192.168.10.52 closed
-//
-
-// OUTPUT
-// $ curl -v http://192.168.10.233:8080
-// *   Trying 192.168.10.233:8080...
-//   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
-//                                  Dload  Upload   Total   Spent    Left  Speed
-//   0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0* Connected to 192.168.10.233 (192.168.10.233) port 8080 (#0)
-// > GET / HTTP/1.1
-// > Host: 192.168.10.233:8080
-// > User-Agent: curl/7.74.0
-// > Accept: */*
-// >
-// * Mark bundle as not supporting multiuse
-// < HTTP/1.1 200 OK
-// < Content-Type: text/html
-// < Connection: close
-// <
-// { [59 bytes data]
-// 100    59    0    59    0     0   1156      0 --:--:-- --:--:-- --:--:--  1156<html><body><h3>Hello from stm32f429zi !</h3></body></html>
-// * Closing connection 0
-//
-
 
 #ifndef _HTTP_SERVER_H
 #define _HTTP_SERVER_H
 
 #include <sys/types.h>
 
+// see "socket.h" line 679
+/* ... code must include fcntl.h before socket.h: */
+#include <fcntl.h>
+
+#include <net/socket.h>
+#include <net/net_core.h>
+#include <net/net_ip.h>
+#include <net/net_if.h>
+
+#include <net/http_parser.h>
+
 #include "http_request.h"
 
+/*___________________________________________________________________________*/
+
 #define HTTP_SERVER_BIND_PORT               8080
+
+#define HTTP_SERVER_CONNECTIONS_COUNT       5
+
+#define HTTP_SERVER_TLS                     0
+
+#if HTTP_SERVER_TLS
+#define HTTP_SERVER_SOCKET_LISTEN           2
+#else
+#define HTTP_SERVER_SOCKET_LISTEN           1
+#endif
+
+#define HTTP_SERVER_POLL_FDS_ARRAY_SIZE     HTTP_SERVER_SOCKET_LISTEN + HTTP_SERVER_CONNECTIONS_COUNT
 
 #define HTTP_SERVER_THREAD_STACK_SIZE       2048
 #define HTTP_SERVER_THREAD_PRIORITY         K_PRIO_PREEMPT(8)
@@ -78,8 +65,61 @@ private:
 
 /*___________________________________________________________________________*/
 
+// State machine
+
+    enum state {
+        WAITING,
+        RECV,
+        SEND,
+        CLOSED,
+        ERROR,
+        PROCESS
+    };
+
+    struct http_connection
+    {
+        // socket file descriptor (client socket)
+        int fd;
+
+        // client address and len
+        struct sockaddr_in addr;
+        socklen_t addr_len;
+
+        // buffers
+        char recv_buf[200];
+        char send_buf[2000];
+
+        // buffer sizes
+        size_t recv_buf_len;
+        size_t send_buf_len;
+
+        // current position in the buffer
+        char *p_recv;
+        char *p_send;
+
+        // parser
+        http_parser parser;
+    };
+
+    static struct http_connection connections[HTTP_SERVER_CONNECTIONS_COUNT];
+
+    struct http_connection * create_context(int index, int sock)
+    {
+        if (sock >= 0)
+        {
+            connections[index].fd = sock;
+            
+            return &connections[index];
+        }
+
+        return nullptr;
+    }
+
+/*___________________________________________________________________________*/
+
 public:
-    static uint32_t counter;
+    int port;
+    
     
     c_http_server() {
         p_instance = this;
@@ -93,6 +133,40 @@ public:
 
 /*___________________________________________________________________________*/
 
+ // SOCKET
+
+    // SERVER
+    int serv_fd = 0;
+    int sec_serv_fd = 0;
+    struct sockaddr_in bind_addr;
+
+    // POLL
+    struct pollfd fds[HTTP_SERVER_POLL_FDS_ARRAY_SIZE]; 
+    int nfds;   // initialize to 0
+
+    // inline function can be difficult to debug (breakpoints ?)
+    inline int setup_server(void);
+
+    inline int poll_fds(void);
+
+    inline int accept_incoming_connections(void);
+
+    inline bool is_listening_socket(int fd) const;
+
+    inline bool new_connections_available(void) const;
+    
+    int set_socket_nonblocking(int fd);
+
+    void compress_fds(void);
+
+    void clear_server(void);
+
+/*___________________________________________________________________________*/
+
+
+
+/*___________________________________________________________________________*/
+
     static char recv_buffer[HTTP_SERVER_RECV_BUFFER_SIZE];
     static char *send_buffer;
 
@@ -101,9 +175,9 @@ public:
 
     static c_http_request request;
 
-    static inline int read_request(int client);
-
     static inline size_t parse_request(const char *buffer, size_t len, c_http_request *request);
+
+
 };
 
 #endif
