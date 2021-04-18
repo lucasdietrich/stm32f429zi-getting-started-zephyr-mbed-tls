@@ -50,8 +50,6 @@
 #define HTTP_SERVER_THREAD_STACK_SIZE       2048
 #define HTTP_SERVER_THREAD_PRIORITY         K_PRIO_PREEMPT(8)
 
-#define HTTP_SERVER_RECV_BUFFER_SIZE        500
-
 
 /*___________________________________________________________________________*/
 
@@ -62,58 +60,6 @@ private:
     static c_http_server *p_instance;
 
     static struct k_thread http_server_thread;
-
-/*___________________________________________________________________________*/
-
-// State machine
-
-    enum state {
-        WAITING,
-        RECV,
-        SEND,
-        CLOSED,
-        ERROR,
-        PROCESS
-    };
-
-    struct http_connection
-    {
-        // socket file descriptor (client socket)
-        int fd;
-
-        // client address and len
-        struct sockaddr_in addr;
-        socklen_t addr_len;
-
-        // buffers
-        char recv_buf[200];
-        char send_buf[2000];
-
-        // buffer sizes
-        size_t recv_buf_len;
-        size_t send_buf_len;
-
-        // current position in the buffer
-        char *p_recv;
-        char *p_send;
-
-        // parser
-        http_parser parser;
-    };
-
-    static struct http_connection connections[HTTP_SERVER_CONNECTIONS_COUNT];
-
-    struct http_connection * create_context(int index, int sock)
-    {
-        if (sock >= 0)
-        {
-            connections[index].fd = sock;
-            
-            return &connections[index];
-        }
-
-        return nullptr;
-    }
 
 /*___________________________________________________________________________*/
 
@@ -167,17 +113,9 @@ public:
 
 /*___________________________________________________________________________*/
 
-    static char recv_buffer[HTTP_SERVER_RECV_BUFFER_SIZE];
-    static char *send_buffer;
-
-    static ssize_t p_recv;
-    static ssize_t p_send;
-
-    static c_http_request request;
+    static c_http_request requests[HTTP_SERVER_CONNECTIONS_COUNT];
 
     static inline size_t parse_request(const char *buffer, size_t len, c_http_request *request);
-
-
 };
 
 #endif

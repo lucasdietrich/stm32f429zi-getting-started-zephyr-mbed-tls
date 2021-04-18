@@ -23,15 +23,7 @@ struct k_thread c_http_server::http_server_thread;
 
 /*___________________________________________________________________________*/
 
-char c_http_server::recv_buffer[HTTP_SERVER_RECV_BUFFER_SIZE];
-char *c_http_server::send_buffer;
-
-ssize_t c_http_server::p_recv = 0u;
-ssize_t c_http_server::p_send = 0u;
-
-c_http_request c_http_server::request = c_http_request();
-
-struct c_http_server::http_connection c_http_server::connections[HTTP_SERVER_CONNECTIONS_COUNT];
+c_http_request c_http_server::requests[HTTP_SERVER_CONNECTIONS_COUNT];
 
 /*___________________________________________________________________________*/
 
@@ -259,7 +251,11 @@ inline int c_http_server::accept_incoming_connections(void)
     int ret;
 
     do {
-        new_client_fd = accept(serv_fd, NULL, NULL);        
+        struct sockaddr_in addr;
+        socklen_t addr_len = sizeof(struct sockaddr_in);
+
+        new_client_fd = accept(serv_fd, (struct sockaddr*) &addr, &addr_len);
+
         if (new_client_fd < 0)
         {
             // accepting again would block (EWOULDBLOCK == EAGAIN)
@@ -276,7 +272,10 @@ inline int c_http_server::accept_incoming_connections(void)
             }
         }
 
-        LOG_DBG("Accept new connection (%d)", new_client_fd);
+        char addr_str[NET_IPV4_ADDR_LEN];
+        inet_ntop(addr.sin_family, &addr.sin_addr, addr_str, sizeof(addr_str));
+
+        LOG_DBG("Accept new connection (%d) from %s", new_client_fd, log_strdup(addr_str));
 
         // https://man7.org/linux/man-pages/man2/accept.2.html#CONFORMING_TO
         ret = set_socket_nonblocking(new_client_fd);
