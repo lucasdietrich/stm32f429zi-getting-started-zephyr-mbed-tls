@@ -5,7 +5,15 @@
 
 /*___________________________________________________________________________*/
 
-#define HTTP_SERVER_REQUEST_URL_SIZE        120
+#define HTTP_REQUEST_BUFFER_SIZE        2000
+
+/*___________________________________________________________________________*/
+
+#define GET_HTTP_REQUEST_OBJECT(parser) (((c_http_request*) parser->data))
+
+int on_message_complete(struct http_parser *parser);
+
+int on_url(struct http_parser *parser, const char *at, size_t length);
 
 /*___________________________________________________________________________*/
 
@@ -13,18 +21,26 @@ class c_http_request
 {
 public:
 
-    http_parser parser;
+    struct http_parser parser;
 
-    char buffer[2000];
+    struct http_parser_settings settings;
+
+    char buffer[HTTP_REQUEST_BUFFER_SIZE];
 
     char * p;
 
-    
+    uint16_t remaining = HTTP_REQUEST_BUFFER_SIZE;
 
     /*___________________________________________________________________________*/
 
     c_http_request();
 
+    void clear(void);
+
+    void parse_appended(int appended_size);
+
+    /*___________________________________________________________________________*/
 };
+
 
 #endif

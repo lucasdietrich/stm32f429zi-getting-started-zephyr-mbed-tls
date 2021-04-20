@@ -47,6 +47,7 @@
 
 #define HTTP_SERVER_POLL_FDS_ARRAY_SIZE     HTTP_SERVER_SOCKET_LISTEN + HTTP_SERVER_CONNECTIONS_COUNT
 
+
 #define HTTP_SERVER_THREAD_STACK_SIZE       2048
 #define HTTP_SERVER_THREAD_PRIORITY         K_PRIO_PREEMPT(8)
 
@@ -84,11 +85,12 @@ public:
     // SERVER
     int serv_fd = 0;
     int sec_serv_fd = 0;
+
     struct sockaddr_in bind_addr;
 
     // POLL
     struct pollfd fds[HTTP_SERVER_POLL_FDS_ARRAY_SIZE]; 
-    int nfds;   // initialize to 0
+    int nfds;
 
     // inline function can be difficult to debug (breakpoints ?)
     inline int setup_server(void);
@@ -114,6 +116,10 @@ public:
 /*___________________________________________________________________________*/
 
     static c_http_request requests[HTTP_SERVER_CONNECTIONS_COUNT];
+
+    static c_http_request * create_request(int sock);
+
+    static c_http_request * get_request(int sock);
 
     static inline size_t parse_request(const char *buffer, size_t len, c_http_request *request);
 };

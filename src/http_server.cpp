@@ -133,6 +133,7 @@ inline int c_http_server::setup_server(void)
 inline int c_http_server::poll_fds(void)
 {
     int ret;
+    int received;
     bool compress_fds_requested = false;
     const int current_size = nfds;
 
@@ -154,6 +155,7 @@ inline int c_http_server::poll_fds(void)
         return ret;
     }
 
+    // poll on each fd
     for(int_fast16_t i = 0; i < current_size; i++)
     {
         if (fds[i].revents == 0)    // no event ignore
@@ -180,22 +182,28 @@ inline int c_http_server::poll_fds(void)
         {
             bool close_connection_requested = false;
 
+            // prepare
+           
+           c_http_request * request = &requests[i - 1];
+
             do
             {
-                LOG_DBG("Receiving on socked (%d)", fd);
+                LOG_DBG("Event on client socket (%d)", fd);
 
-                char buf[50];
-                ret = recv(fd, buf, sizeof(buf), 0);
-                if (ret < 0)
+                // set max recv size to 50 to test appending
+                uint16_t recv_size = MIN(request->remaining, 50);
+
+                received = recv(fd, request->p, recv_size, 0);
+                if (received < 0)    // error
                 {
-                    // errno = -ret
+                    // errno = -received
                     if (errno == EWOULDBLOCK)
                     {
-                        LOG_DBG("recv would block");
+                        LOG_DBG("recv would block, break");
                     }
                     else
                     {
-                        LOG_DBG("recv failed with errno = %d", ret);
+                        LOG_DBG("recv failed with errno = %d", received);
 
                         close_connection_requested = true;
                     }
@@ -203,7 +211,7 @@ inline int c_http_server::poll_fds(void)
                     break;
                 }
 
-                if (ret == 0) // connection closed
+                if (received == 0) // close connection requested
                 {
                     LOG_DBG("connection closed");
 
@@ -211,19 +219,24 @@ inline int c_http_server::poll_fds(void)
 
                     break;
                 }
-                else if (ret > 0) // bytes received
+                else if (received > 0) // bytes received
                 {
-                    LOG_DBG("recv %d bytes on socket %d", ret, fd);
+                    request->parse_appended(received);
+
+                    LOG_DBG("recv %d bytes on socket %d", received, fd);
                 }
 
-                // TODO : break or not if buffer is not full ?
-                if (ret < (int) sizeof(buf))
+                // recv len not fully received
+                /*
+                if (received < (int) sizeof(buf))
                 {
                     break; 
                 }
+                */
 
             } while(true);
 
+            // close if requested
             if (close_connection_requested)
             {
                 close(fds[i].fd);
@@ -249,6 +262,28 @@ inline int c_http_server::accept_incoming_connections(void)
 {
     int new_client_fd;
     int ret;
+
+    // TODO maybe simplify with pre existing accept function
+    if (nfds == HTTP_SERVER_POLL_FDS_ARRAY_SIZE) // too much connections, need to refuse this unwished connection
+    {
+        // https://stackoverflow.com/questions/16590847/how-can-i-refuse-a-socket-connection-in-c/54542397
+
+        int refused = accept(serv_fd, nullptr, nullptr);
+
+        if (refused >= 0)
+        {
+            LOG_WRN("Too much connections, refusing recently received ...");
+
+            close(refused);
+        }
+        else // debug
+        {
+            // do(6) / 5
+            LOG_ERR("Accept failed on unwished connection");
+        }
+
+        return 0;
+    }
 
     do {
         struct sockaddr_in addr;
@@ -288,6 +323,9 @@ inline int c_http_server::accept_incoming_connections(void)
         // adding new incoming connection to fds
         fds[nfds].fd = new_client_fd;
         fds[nfds].events = POLLIN;
+
+        // clear request
+        requests[nfds - 1].clear();
 
         nfds++;
 
@@ -377,7 +415,45 @@ void c_http_server::clear_server(void)
 
 /*___________________________________________________________________________*/
 
+c_http_request *c_http_server::create_request(int sock)
+{
+    if (sock < 0)
+    {
+        return nullptr;
+    }
+    
+    for (int_fast32_t idx = HTTP_SERVER_SOCKET_LISTEN; idx < p_instance->nfds; idx++)
+    {
+        if (p_instance->fds[idx].fd == sock)
+        {
+            c_http_request * req = &requests[idx - HTTP_SERVER_SOCKET_LISTEN];
 
+            req->clear();
+            
+            return req;
+        }
+    }
+
+    return nullptr;
+}
+
+c_http_request *c_http_server::get_request(int sock)
+{
+    if (sock < 0)
+    {
+        return nullptr;
+    }
+    
+    for (int_fast32_t idx = HTTP_SERVER_SOCKET_LISTEN; idx < p_instance->nfds; idx++)
+    {
+        if (p_instance->fds[idx].fd == sock)
+        {
+            return &requests[idx - HTTP_SERVER_SOCKET_LISTEN];
+        }
+    }
+
+    return nullptr;
+}
 
 /*___________________________________________________________________________*/
 

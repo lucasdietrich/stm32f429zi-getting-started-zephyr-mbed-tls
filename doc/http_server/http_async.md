@@ -11,7 +11,18 @@ Usefull functions:
 - http_body_is_final // for chunk encoding
 - 
 
-Sources :
+## Issues :
+
+- ERROR "Accept failed on not wished connection" happend with CONFIG_POSIX_MAX_FDS=7 with 5 client socket + 1 server socket + 1 udp server
+
+Explanation : we cannot accept a new connection since we reached the maximum number of file descriptor.
+
+## Todo :
+
+- Buffer manage to get buffers if necessary with MEM management SAB ?...
+    - no malloc
+
+## Sources :
 - [POSIX accept](https://pubs.opengroup.org/onlinepubs/9699919799/functions/accept.html)
 - [POSIX poll](https://pubs.opengroup.org/onlinepubs/9699919799/functions/poll.html)
 - [POSIX select](https://pubs.opengroup.org/onlinepubs/9699919799/functions/select.html)
