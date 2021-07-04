@@ -24,6 +24,7 @@ struct k_thread c_http_server::http_server_thread;
 /*___________________________________________________________________________*/
 
 c_http_request c_http_server::requests[HTTP_SERVER_CONNECTIONS_COUNT];
+c_http_response c_http_server::responses[HTTP_SERVER_CONNECTIONS_COUNT];
 
 /*___________________________________________________________________________*/
 
@@ -139,7 +140,7 @@ inline int c_http_server::poll_fds(void)
 
     LOG_DBG("Polling on %d/%u sockets ...", nfds, HTTP_SERVER_POLL_FDS_ARRAY_SIZE); // HTTP_SERVER_POLL_FDS_ARRAY_SIZE = ARRAY_SIZE(fds)
 
-    const int timeout = 3*60*1000; // abandon after 3 minutes
+    const int timeout = 5*60*1000; // abandon after 3 minutes
 
     ret = poll(fds, nfds, timeout); // todo change
     if (ret == 0)
@@ -163,11 +164,18 @@ inline int c_http_server::poll_fds(void)
             continue;
         }
 
-        if (fds[i].revents != POLLIN)
+        if (0 == (fds[i].revents & (POLLIN | POLLOUT)))  // fds[i].revents & (POLLIN | POLLOUT)
         {
             LOG_ERR("Invalid revents value %d for socket (%d)", fds[i].revents, fds[i].fd);
 
             return -1;
+        }
+
+        // todo
+        if (fds[i].revents & POLLOUT)
+        {
+            // ready for writability
+            LOG_DBG("ready for writability");
         }
 
         const int fd = fds[i].fd;
@@ -191,9 +199,10 @@ inline int c_http_server::poll_fds(void)
                 LOG_DBG("Event on client socket (%d)", fd);
 
                 // set max recv size to 50 to test appending
-                uint16_t recv_size = MIN(request->remaining, 50);
+                // maybe MIN value must be CONFIG_NET_BUF_DATA_SIZE (as for CONFIG_NET_BUF_DATA_SIZE=128), in order to free a buffer at each read ?
+                uint16_t recv_size = MIN(request->remaining, CONFIG_NET_BUF_DATA_SIZE); // CONFIG_NET_BUF_DATA_SIZE
 
-                received = recv(fd, request->p, recv_size, 0);
+                received = recv(fd, request ->p, recv_size, 0);
                 if (received < 0)    // error
                 {
                     // errno = -received
@@ -221,9 +230,26 @@ inline int c_http_server::poll_fds(void)
                 }
                 else if (received > 0) // bytes received
                 {
+                    LOG_DBG("recv %d bytes on socket %d", received, fd);
+
                     request->parse_appended(received);
 
-                    LOG_DBG("recv %d bytes on socket %d", received, fd);
+                    if (request->is_complete())
+                    {
+                        LOG_INF("request complete");
+
+                        handle_request(request);
+                    }
+                    // if (http_body_is_final(&request->parser))
+                    // {
+                    //     int sent = send(fds[i].fd, content, strlen(content), 0);
+
+                    //     LOG_DBG("async sent returned with %d", sent);
+                    // }
+
+#if HTTP_SERVER_SINGLE_READ
+                    break;
+#endif
                 }
 
                 // recv len not fully received
@@ -245,6 +271,15 @@ inline int c_http_server::poll_fds(void)
 
                 compress_fds_requested = true;
             }
+            else
+            {
+                // if request complete
+                LOG_INF("%d", request->parser.state);
+                if (request->is_complete())
+                {
+                    LOG_DBG("Request complete");
+                }
+            }
         }
     }
 
@@ -264,7 +299,7 @@ inline int c_http_server::accept_incoming_connections(void)
     int ret;
 
     // TODO maybe simplify with pre existing accept function
-    if (nfds == HTTP_SERVER_POLL_FDS_ARRAY_SIZE) // too much connections, need to refuse this unwished connection
+    if (nfds == HTTP_SERVER_POLL_FDS_ARRAY_SIZE) // too many connections, need to refuse this unwished connection
     {
         // https://stackoverflow.com/questions/16590847/how-can-i-refuse-a-socket-connection-in-c/54542397
 
@@ -272,7 +307,7 @@ inline int c_http_server::accept_incoming_connections(void)
 
         if (refused >= 0)
         {
-            LOG_WRN("Too much connections, refusing recently received ...");
+            LOG_WRN("Too many connections, refusing recently received ...");
 
             close(refused);
         }
@@ -322,7 +357,7 @@ inline int c_http_server::accept_incoming_connections(void)
 
         // adding new incoming connection to fds
         fds[nfds].fd = new_client_fd;
-        fds[nfds].events = POLLIN;
+        fds[nfds].events = POLLIN;   // | POLLOUT : poll for readability and writeability
 
         // clear request
         requests[nfds - 1].clear();
@@ -415,86 +450,14 @@ void c_http_server::clear_server(void)
 
 /*___________________________________________________________________________*/
 
-c_http_request *c_http_server::create_request(int sock)
+int c_http_server::handle_request(c_http_request *request)
 {
-    if (sock < 0)
-    {
-        return nullptr;
-    }
-    
-    for (int_fast32_t idx = HTTP_SERVER_SOCKET_LISTEN; idx < p_instance->nfds; idx++)
-    {
-        if (p_instance->fds[idx].fd == sock)
-        {
-            c_http_request * req = &requests[idx - HTTP_SERVER_SOCKET_LISTEN];
-
-            req->clear();
-            
-            return req;
-        }
-    }
-
-    return nullptr;
-}
-
-c_http_request *c_http_server::get_request(int sock)
-{
-    if (sock < 0)
-    {
-        return nullptr;
-    }
-    
-    for (int_fast32_t idx = HTTP_SERVER_SOCKET_LISTEN; idx < p_instance->nfds; idx++)
-    {
-        if (p_instance->fds[idx].fd == sock)
-        {
-            return &requests[idx - HTTP_SERVER_SOCKET_LISTEN];
-        }
-    }
-
-    return nullptr;
-}
-
-/*___________________________________________________________________________*/
-
-static char http_current_url[120];
-
-int http_on_url(struct http_parser *, const char *at, size_t length)
-{
-    LOG_HEXDUMP_DBG(at, length, "on_url");
-
-    if (length >= ARRAY_SIZE(http_current_url))
-    {
-        length = ARRAY_SIZE(http_current_url) - 1;
-    }
-
-    strncpy(http_current_url, at, length);
-
-    http_current_url[length] = '\0';
-
     return 0;
 }
 
-inline size_t c_http_server::parse_request(const char *buffer, size_t len, c_http_request *request)
+void c_http_server::dispath_request(c_http_request &request)
 {
-    LOG_HEXDUMP_DBG(buffer, len, "parse_request");
 
-    http_parser parser;
-
-    http_parser_init(&parser, http_parser_type::HTTP_REQUEST);
-
-    const http_parser_settings settings = {
-        .on_url = http_on_url
-    };
-
-    size_t parsed = http_parser_execute(&parser, &settings, buffer, len);
-
-    // LOGGING
-    const char *method_str = log_strdup(http_method_str((enum http_method) parser.method));
-    const char *url_str = log_strdup(http_current_url);
-    const char *errno_str = log_strdup(http_errno_name(HTTP_PARSER_ERRNO(&parser)));
-
-    LOG_INF("HTTP request %s %s : parsed %d/%d errno %d:%s", method_str, url_str, parsed, len, parser.http_errno, errno_str);
-
-    return parsed;
 }
+
+/*___________________________________________________________________________*/

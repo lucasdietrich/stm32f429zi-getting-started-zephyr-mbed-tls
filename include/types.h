@@ -9,7 +9,7 @@
 // APPLICATION
 
 struct __attribute__((__packed__)) app_config_t {
-    const char *name;                   // application name
+    const char name[APP_NAME_MAX_LENGTH];                   // application name
     uint32_t magic_number;
 };
 

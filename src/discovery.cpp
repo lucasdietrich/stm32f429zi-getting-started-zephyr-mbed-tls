@@ -129,9 +129,9 @@ void c_discovery::thread(void *, void *, void *)
 
     LOG_INF("UDP server up (%d), waiting for UDP packets on port %d ...", sock, p_instance->port);
 
-	while (true) {
-
-        received = recvfrom(sock, recv_buffer, sizeof(recv_buffer), 0, (struct sockaddr*) &client_addr, &client_addr_len);
+    while (true)
+    {
+        received = recvfrom(sock, recv_buffer, sizeof(recv_buffer), 0, (struct sockaddr *)&client_addr, &client_addr_len);
 
         if (received < 0)
         {
@@ -158,7 +158,6 @@ void c_discovery::thread(void *, void *, void *)
             continue;
         }
 
-
 #if DISCOVERY_LOOPBACK
         // loopback
         p_send_buffer = recv_buffer;
@@ -169,7 +168,7 @@ void c_discovery::thread(void *, void *, void *)
         send_buffer_length = build_response();
 #endif
 
-        ret = sendto(sock, p_send_buffer, send_buffer_length, 0, (const struct sockaddr*) &client_addr, client_addr_len);
+        ret = sendto(sock, p_send_buffer, send_buffer_length, 0, (const struct sockaddr *)&client_addr, client_addr_len);
 
         if (ret < 0)
         {

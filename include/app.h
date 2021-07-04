@@ -12,10 +12,6 @@
 
 /*___________________________________________________________________________*/
 
-static const char adecy_app_name[APP_NAME_MAX_LENGTH] = APP_NAME;
-
-/*___________________________________________________________________________*/
-
 /**
  * @brief This class initialize the hardware and the the system main threads
  * 
@@ -49,9 +45,9 @@ public:
 
 /*___________________________________________________________________________*/
     
-    struct app_config_t config;
-    struct app_time_t time;
-    struct app_stats_t stats;
+    static struct app_config_t config;
+    static struct app_time_t time;
+    static struct app_stats_t stats;
 
     // modules
     c_discovery discovery;  // todo : c_discovery *discovery;

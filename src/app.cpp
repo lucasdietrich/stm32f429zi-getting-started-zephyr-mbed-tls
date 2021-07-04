@@ -14,6 +14,13 @@ LOG_MODULE_REGISTER(app, LOG_LEVEL_INF);
 
 c_application* c_application::p_instance; //  = new c_application
 
+struct app_config_t c_application::config = {
+    APP_NAME,
+    APP_MAGIC_NUMBER
+};
+struct app_time_t c_application::time;
+struct app_stats_t c_application::stats;
+
 /*___________________________________________________________________________*/
 
 // instanciate immediately
@@ -22,9 +29,6 @@ c_application* c_application::p_instance; //  = new c_application
 c_application::c_application()  // private constructor
 {
     p_instance = this;
-    
-    config.name = adecy_app_name;
-    config.magic_number = APP_MAGIC_NUMBER;
 }
 
 /*___________________________________________________________________________*/

@@ -28,8 +28,10 @@
 #include <net/net_if.h>
 
 #include <net/http_parser.h>
+#include <net/http_parser_state.h>
 
 #include "http_request.h"
+#include "http_response.h"
 
 /*___________________________________________________________________________*/
 
@@ -51,6 +53,13 @@
 #define HTTP_SERVER_THREAD_STACK_SIZE       2048
 #define HTTP_SERVER_THREAD_PRIORITY         K_PRIO_PREEMPT(8)
 
+/**
+ * @brief Only one "recv" between "poll"
+ * 
+ * Default : 0
+ */
+#define HTTP_SERVER_SINGLE_READ             1
+
 
 /*___________________________________________________________________________*/
 
@@ -66,7 +75,6 @@ private:
 
 public:
     int port;
-    
     
     c_http_server() {
         p_instance = this;
@@ -109,19 +117,17 @@ public:
 
     void clear_server(void);
 
-/*___________________________________________________________________________*/
-
-
+    int handle_request(c_http_request *request);
 
 /*___________________________________________________________________________*/
 
-    static c_http_request requests[HTTP_SERVER_CONNECTIONS_COUNT];
+    void dispath_request(c_http_request &request);
 
-    static c_http_request * create_request(int sock);
+/*___________________________________________________________________________*/
 
-    static c_http_request * get_request(int sock);
+static c_http_request requests[HTTP_SERVER_CONNECTIONS_COUNT];
+static c_http_response responses[HTTP_SERVER_CONNECTIONS_COUNT];
 
-    static inline size_t parse_request(const char *buffer, size_t len, c_http_request *request);
 };
 
 #endif

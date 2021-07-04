@@ -31,7 +31,7 @@ void main(void)
 
     struct tm time_infos;
 
-    while(1) 
+    while(1)
     {
 #if MAIN_LOOP_PERIOD
         app.get_time_infos(&time_infos);
