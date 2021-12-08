@@ -36,9 +36,10 @@ void main(void)
 #if MAIN_LOOP_PERIOD
         app.get_time_infos(&time_infos);
 
-        printf("Local (Europe/Paris) Date and time : %04d/%02d/%02d %02d:%02d:%02d\n",
+        printk("Local (Europe/Paris) Date and time : %04d/%02d/%02d %02d:%02d:%02d\n",
                time_infos.tm_year + 1900, time_infos.tm_mon + 1, time_infos.tm_mday,
                time_infos.tm_hour, time_infos.tm_min, time_infos.tm_sec);
+        printk("iface up = %d", net_if_is_up(net_if_get_default()) ? 1 : 0);
 
         k_sleep(K_MSEC(MAIN_LOOP_PERIOD));
 #else

@@ -2,7 +2,7 @@
 #include "hw.h"
 
 #include <logging/log.h>
-LOG_MODULE_REGISTER(if, LOG_LEVEL_INF);
+LOG_MODULE_REGISTER(if, LOG_LEVEL_DBG);
 
 /*___________________________________________________________________________*/
 
