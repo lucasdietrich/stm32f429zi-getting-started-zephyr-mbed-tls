@@ -1,3 +1,11 @@
+# IMPORTANT :
+
+As this is only a getting started project, there will be no more updates on it. However I'm currently working on a real application using Zephyr RTOS and mbedTLS (and for real) : [stm32f429zi-caniot-controller](https://github.com/lucasdietrich/stm32f429zi-caniot-controller)
+
+- Branch *http_async* of this git is abandonned but persistent HTTP connections feature is "properly" implemented in C in the *caniot-controller* project.
+
+---
+
 **this repo contains pictures and big O files, it is only a getting started project :)**
 
 Pages:
