@@ -169,6 +169,9 @@ Maybe cmake, missing binaries, configuration ?
 
 Waiting, I'm setting `CONFIG_NET_CONFIG_AUTO_INIT=y` and don't calling these functions.
 
+SOLUTION:
+Add `CONFIG_NET_CONFIG_SETTINGS=y`
+
 ### 002. <err> os: CONFIG_MINIMAL_LIBC_MALLOC_ARENA_SIZE is 0
 
 Need
